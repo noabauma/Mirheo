@@ -13,6 +13,7 @@ namespace mirheo
 class PairwiseDPD;
 class PairwiseNoRandomDPD;
 class PairwiseLJ;
+class PairwiseSW;   //Noah Baumann
 
 struct LJAwarenessNone;
 struct LJAwarenessObject;
