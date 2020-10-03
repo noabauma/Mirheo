@@ -1,6 +1,7 @@
 // Code: Noah Baumann Bachelor Thesis
 // 2Body SW potential
 // SW: Stillinger-Weber potiential
+// this code is inspired by "lj.h"
 #pragma once
 
 #include "accumulators/force.h"
@@ -19,19 +20,21 @@ class PairwiseSW : public PairwiseKernel, public ParticleFetcher
 public:
     using ViewType     = PVview;     ///< Compatible view type
     using ParticleType = Particle;   ///< Compatible particle type
-    using HandlerType  = PairwiseLJ; ///< Corresponding handler
-    using ParamsType   = LJParams;   ///< Corresponding parameters type
+    using HandlerType  = PairwiseSW; ///< Corresponding handler
+    using ParamsType   = SWParams;   ///< Corresponding parameters type
 
     /// Constructor
-    PairwiseSW(real rc, real epsilon, real sigma) :
+    PairwiseSW(real rc, real epsilon, real sigma, real A, real B) :
         ParticleFetcher(rc),
         epsilon_(epsilon),
-        sigma_(sigma)
+        sigma_(sigma),
+        A_(A),
+        B_(B)
     {}
 
     /// Generic constructor
     PairwiseSW(real rc, const ParamsType& p, __UNUSED real dt, __UNUSED long seed=42424242) :
-        PairwiseSW{rc, p.epsilon, p.sigma}
+        PairwiseSW{rc, p.epsilon, p.sigma, p.A, p.B}
     {}
 
     /// Evaluate the force
@@ -45,7 +48,7 @@ public:
 
         const real rs2 = (sigma_*sigma_) / dr2;
         const real rs4 = rs2 * rs2;
-        const real phi = A*epsilon*(B*rs4 - 1.0_r)*math::exp(sigma_ / (dr - a*sigma_));
+        const real phi = A_*epsilon*(B_*rs4 - 1.0_r)*math::exp(sigma_ / (math::sqrt(dr2) - rc_));
 
         return phi * dr/dr2;
     }
@@ -68,9 +71,8 @@ public:
 private:
     real epsilon_;
     real sigma_;
-    const real A = 7.049556277;     //given from the paper
-    const real B = 0.6022245584;
-    const real a = 1.8;             //reduced cutoff
+    real A_;        //given from the paper 7.049556277
+    real B_;        //0.6022245584
 };
 
 } // namespace mirheo
