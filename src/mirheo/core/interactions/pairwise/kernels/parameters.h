@@ -192,7 +192,8 @@ struct SDPDParams
 MIRHEO_MEMBER_VARS(SDPDParams, viscosity, kBT, varEOSParams, varDensityKernelParams);
 
 /// variant of all possible pairwise interactions
-using VarPairwiseParams = mpark::variant<DPDParams,
+using VarPairwiseParams = mpark::variant<SWParams,
+                                         DPDParams,
                                          LJParams,
                                          RepulsiveLJParams,
                                          MDPDParams,

@@ -48,7 +48,7 @@ public:
 
         const real rs2 = (sigma_*sigma_) / dr2;
         const real rs4 = rs2 * rs2;
-        const real phi = A_*epsilon*(B_*rs4 - 1.0_r)*math::exp(sigma_ / (math::sqrt(dr2) - rc_));
+        const real phi = A_*epsilon_*(B_*rs4 - 1.0_r)*math::exp(sigma_ / (math::sqrt(dr2) - rc_));
 
         return phi * dr/dr2;
     }
