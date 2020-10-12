@@ -1,3 +1,0 @@
-#/bin/bash -l
-
-mir.run --runargs "- n 1" echo 5
