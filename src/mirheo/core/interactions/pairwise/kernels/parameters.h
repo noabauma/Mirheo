@@ -10,8 +10,7 @@ namespace mirheo
 
 // forward declaration of pairwise kernels
 
-class PairwiseSW;   //Noah Baumann
-
+class PairwiseSW;
 class PairwiseDPD;
 class PairwiseNoRandomDPD;
 class PairwiseLJ;
@@ -40,7 +39,7 @@ class PairwiseSDPD;
 // corresponding parameters, visible by users
 
 /// Dissipative Particle Dynamics  parameters
-struct SWParams //Noah Baumann
+struct SWParams
 {
     using KernelType = PairwiseSW; ///< the corresponding kernel
     real epsilon;   ///< force coefficient

@@ -33,7 +33,7 @@ public:
     {}
 
     /// Generic constructor
-    PairwiseSW(real rc, const ParamsType& p, __UNUSED real dt, __UNUSED long seed=42424242) :
+    PairwiseSW(real rc, const ParamsType& p, __UNUSED long seed=42424242) :
         PairwiseSW{rc, p.epsilon, p.sigma, p.A, p.B}
     {}
 

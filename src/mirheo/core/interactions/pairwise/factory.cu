@@ -4,8 +4,7 @@
 #include "pairwise.h"
 #include "pairwise_with_stress.h"
 
-#include "kernels/sw.h"     //Noah Baumann
-
+#include "kernels/sw.h"
 #include "kernels/density.h"
 #include "kernels/density_kernels.h"
 #include "kernels/dpd.h"
@@ -141,7 +140,6 @@ static void tryLoadPairwiseNoStress(PairwiseFactoryVisitor &visitor)
     }
 }
 
-//Noah Baumann: Implented "SWParams"
 std::shared_ptr<BasePairwiseInteraction>
 loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObject& config)
 {
@@ -159,7 +157,7 @@ loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObjec
     // `variantForeach`, and for those that don't we simply call
     // `tryLoadPairwise` directly.
 
-    // SWParams.    (Noah Baumann)
+    // SWParams.
     tryLoadPairwiseStress  <SWParams::KernelType>(visitor);
     tryLoadPairwiseNoStress<SWParams::KernelType>(visitor);
 

@@ -231,7 +231,7 @@ interaction_factory::createPairwiseInteraction(const MirState *state, std::strin
         varParams = factory_helper::readMDPDParams(desc);
     else if (type == "SDPD")
         varParams = factory_helper::readSDPDParams(desc);
-    else if (type == "SW")                                  //Noah Baumann
+    else if (type == "SW")
         varParams = factory_helper::readSWParams(desc);
     else if (type == "LJ")
         varParams = factory_helper::readLJParams(desc);

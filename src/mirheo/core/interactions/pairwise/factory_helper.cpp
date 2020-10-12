@@ -8,7 +8,7 @@ namespace factory_helper
 {
 template <> real ParamsReader::makeDefault<real>() const {return defaultReal;}
 
-//Noah Baumann
+
 template <> void readParams<SWParams>(SWParams& p, ParametersWrap& desc, ParamsReader reader)
 {
     const auto epsilon = reader.read<real>(desc, "epsilon");
@@ -125,7 +125,6 @@ template <> void readParams<SDPDParams>(SDPDParams& p, ParametersWrap& desc, Par
     if (kBT       != defaultReal) p.kBT       = kBT;
 }
 
-//Noah Baumann
 SWParams readSWParams(ParametersWrap& desc)
 {
     const ParamsReader reader {ParamsReader::Mode::FailIfNotFound};
