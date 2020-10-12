@@ -58,6 +58,7 @@ void OutletPlugin::setup(Simulation *simulation, const MPI_Comm& comm, const MPI
 {
     SimulationPlugin::setup(simulation, comm, interComm);
 
+    pvs_.clear();
     pvs_.reserve(pvNames_.size());
     for (const auto& pvName : pvNames_)
         pvs_.push_back( simulation->getPVbyNameOrDie(pvName) );
@@ -268,7 +269,7 @@ void RateOutletPlugin::beforeCellLists(cudaStream_t stream)
         PVview view(pv, pv->local());
 
         const real seed = udistr_(gen_);
-        const real QTimesdt = rate_ * getState()->dt * view.invMass;
+        const real QTimesdt = rate_ * getState()->getDt() * view.invMass;
 
         auto isInsideFunc = [field = outletRegion_->handler()] __device__ (const real3& r)
         {

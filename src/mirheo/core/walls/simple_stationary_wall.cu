@@ -347,6 +347,16 @@ void SimpleStationaryWall<InsideWallChecker>::attach(ParticleVector *pv, CellLis
     CUDA_Check( cudaDeviceSynchronize() );
 }
 
+template<class InsideWallChecker>
+void SimpleStationaryWall<InsideWallChecker>::detachAllCellLists()
+{
+    assert(particleVectors_.size() == cellLists_.size());
+    assert(particleVectors_.size() == boundaryCells_.size());
+    particleVectors_.clear();
+    cellLists_.clear();
+    boundaryCells_.clear();
+}
+
 static bool keepAllpersistentDataPredicate(const DataManager::NamedChannelDesc& namedDesc)
 {
     return namedDesc.second->persistence == DataManager::PersistenceMode::Active;
@@ -456,7 +466,7 @@ void SimpleStationaryWall<InsideWallChecker>::removeInner(ParticleVector *pv)
 template<class InsideWallChecker>
 void SimpleStationaryWall<InsideWallChecker>::bounce(cudaStream_t stream)
 {
-    const real dt = this->getState()->dt;
+    const real dt = this->getState()->getDt();
 
     bounceForce_.clear(stream);
 
