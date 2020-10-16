@@ -2,6 +2,9 @@
 // 2Body SW potential
 // SW: Stillinger-Weber potiential
 // this code is inspired by "lj.h"
+
+// Paper: "Water Modeled As an Intermediate Element between Carbon and Silicon 2009"
+// https://pubs.acs.org/doi/abs/10.1021/jp805227c
 #pragma once
 
 #include "accumulators/force.h"
@@ -47,10 +50,13 @@ public:
             return make_real3(0.0_r);
 
         const real rs2 = (sigma_*sigma_) / dr2;
-        const real rs4 = rs2 * rs2;
-        const real phi = A_*epsilon_*(B_*rs4 - 1.0_r)*math::exp(sigma_ / (math::sqrt(dr2) - rc_));
+        const real B_rs4 = B_*rs2 * rs2;
+        const real r_rc = math::sqrt(dr2) - rc_;
+        const real exp = math::exp(sigma_ / r_rc);
+        const real A_eps_exp = A_*epsilon_*exp;
+        const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*math::sqrt(dr2)) + (4.0_r*B_rs4*A_eps_exp)/dr2;
 
-        return phi * dr/dr2;
+        return phi * dr;
     }
 
     /// initialize accumulator
