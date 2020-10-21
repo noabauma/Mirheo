@@ -447,17 +447,18 @@ void Simulation::setIntegrator(const std::string& integratorName, const std::str
     integratorPrototypes_.push_back({pv, integrator});
 }
 
-void Simulation::setInteraction(const std::string& interactionName, const std::string& pv1Name, const std::string& pv2Name)
+void Simulation::setInteraction(const std::string& interactionName, const std::string& pv1Name, const std::string& pv2Name, const std::string& pv3Name)
 {
-    auto pv1 = getPVbyNameOrDie(pv1Name);
-    auto pv2 = getPVbyNameOrDie(pv2Name);
+    auto *pv1 = getPVbyNameOrDie(pv1Name);
+    auto *pv2 = getPVbyNameOrDie(pv2Name);
+    auto *pv3 = !pv3Name.empty() ? getPVbyNameOrDie(pv3Name) : nullptr;
 
     if (interactionMap_.find(interactionName) == interactionMap_.end())
         die("No such interaction: %s", interactionName.c_str());
     auto interaction = interactionMap_[interactionName].get();
 
     const real rc = interaction->getCutoffRadius();
-    interactionPrototypes_.push_back({rc, pv1, pv2, interaction});
+    interactionPrototypes_.push_back({rc, pv1, pv2, pv3, interaction});
 }
 
 void Simulation::setBouncer(const std::string& bouncerName, const std::string& objName, const std::string& pvName)
@@ -576,6 +577,8 @@ void Simulation::_prepareCellLists()
         real rc = prototype.rc;
         cutOffMap[prototype.pv1].push_back(rc);
         cutOffMap[prototype.pv2].push_back(rc);
+        if (prototype.pv3)
+            cutOffMap[prototype.pv3].push_back(rc);
     }
 
     for (auto& cutoffPair : cutOffMap)
@@ -644,25 +647,26 @@ void Simulation::_prepareInteractions()
     for (auto& prototype : interactionPrototypes_)
     {
         auto  rc = prototype.rc;
-        auto pv1 = prototype.pv1;
-        auto pv2 = prototype.pv2;
+        auto *pv1 = prototype.pv1;
+        auto *pv2 = prototype.pv2;
+        auto *pv3 = prototype.pv3;
 
-        auto& clVec1 = run_->cellListMap[pv1];
-        auto& clVec2 = run_->cellListMap[pv2];
+        auto* clVec1 = &run_->cellListMap[pv1];
+        auto* clVec2 = &run_->cellListMap[pv2];
+        auto* clVec3 = pv3 ? &run_->cellListMap[pv3] : nullptr;
 
-        CellList *cl1, *cl2;
-
-        cl1 = selectBestClist(clVec1, rc, rcTolerance_);
-        cl2 = selectBestClist(clVec2, rc, rcTolerance_);
+        CellList *cl1 = selectBestClist(*clVec1, rc, rcTolerance_);
+        CellList *cl2 = selectBestClist(*clVec2, rc, rcTolerance_);
+        CellList *cl3 = clVec3 ? selectBestClist(*clVec3, rc, rcTolerance_) : nullptr;
 
         auto inter = prototype.interaction;
 
-        inter->setPrerequisites(pv1, pv2, cl1, cl2);
+        inter->setPrerequisites(pv1, pv2, pv3, cl1, cl2, cl3);
 
         if (inter->getStage() == Interaction::Stage::Intermediate)
-            run_->interactionsIntermediate.add(inter, pv1, pv2, cl1, cl2);
+            run_->interactionsIntermediate.add(inter, pv1, pv2, pv3, cl1, cl2, cl3);
         else
-            run_->interactionsFinal      .add(inter, pv1, pv2, cl1, cl2);
+            run_->interactionsFinal       .add(inter, pv1, pv2, pv3, cl1, cl2, cl3);
     }
 }
 
@@ -1443,7 +1447,7 @@ void Simulation::snapshot()
 }
 
 MIRHEO_MEMBER_VARS(Simulation::IntegratorPrototype, pv, integrator);
-MIRHEO_MEMBER_VARS(Simulation::InteractionPrototype, rc, pv1, pv2, interaction);
+MIRHEO_MEMBER_VARS(Simulation::InteractionPrototype, rc, pv1, pv2, pv3, interaction);
 MIRHEO_MEMBER_VARS(Simulation::WallPrototype, wall, pv, maximumPartTravel);
 MIRHEO_MEMBER_VARS(Simulation::CheckWallPrototype, wall, every);
 MIRHEO_MEMBER_VARS(Simulation::BouncerPrototype, bouncer, pv);

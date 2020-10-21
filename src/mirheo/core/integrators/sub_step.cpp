@@ -103,7 +103,7 @@ void IntegratorSubStep::execute(ParticleVector *pv, cudaStream_t stream)
             pv->local()->forces().copy(slowForces_, stream);
 
         for (auto ff : fastForces_)
-            ff->local(pv, pv, nullptr, nullptr, stream);
+            ff->local(pv, pv, pv, nullptr, nullptr, nullptr, stream);
 
         subIntegrator_->execute(pv, stream);
 
@@ -125,7 +125,7 @@ void IntegratorSubStep::setPrerequisites(ParticleVector *pv)
 {
     // luckily do not need cell lists for self interactions
     for (auto ff : fastForces_)
-        ff->setPrerequisites(pv, pv, nullptr, nullptr);
+        ff->setPrerequisites(pv, pv, pv, nullptr, nullptr, nullptr);
 }
 
 void IntegratorSubStep::updateSubState_()

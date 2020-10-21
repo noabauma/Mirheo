@@ -122,8 +122,10 @@ public:
 
     void local(ParticleVector *pv1,
                __UNUSED ParticleVector *pv2,
+               __UNUSED ParticleVector *pv3,
                __UNUSED CellList *cl1,
                __UNUSED CellList *cl2,
+               __UNUSED CellList *cl3,
                cudaStream_t stream) override
     {
         auto mv = dynamic_cast<MembraneVector *>(pv1);
@@ -166,10 +168,12 @@ public:
 
     void setPrerequisites(ParticleVector *pv1,
                           __UNUSED ParticleVector *pv2,
+                          __UNUSED ParticleVector *pv3,
                           __UNUSED CellList *cl1,
-                          __UNUSED CellList *cl2) override
+                          __UNUSED CellList *cl2,
+                          __UNUSED CellList *cl3) override
     {
-        BaseMembraneInteraction::setPrerequisites(pv1, pv2, cl1, cl2);
+        BaseMembraneInteraction::setPrerequisites(pv1, pv2, pv3, cl1, cl2, cl3);
 
         if (auto mv = dynamic_cast<MembraneVector*>(pv1))
         {

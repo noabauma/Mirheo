@@ -7,6 +7,8 @@
 #include "pairwise/base_pairwise.h"
 #include "pairwise/factory.h"
 #include "pairwise/factory_helper.h"
+#include "triplewise/factory.h"
+#include "triplewise/factory_helper.h"
 #include "rod/base_rod.h"
 #include "rod/factory.h"
 
@@ -246,6 +248,21 @@ interaction_factory::createPairwiseInteraction(const MirState *state, std::strin
 
     desc.checkAllRead();
     return createInteractionPairwise(state, name, rc, varParams, varStressParams);
+}
+
+std::shared_ptr<BaseTriplewiseInteraction>
+interaction_factory::createTriplewiseInteraction(const MirState *state, std::string name, real rc, const std::string& type, const MapParams& parameters)
+{
+    ParametersWrap desc {parameters};
+    VarTriplewiseParams varParams;
+
+    if (type == "Dummy")
+        varParams = factory_helper::readDummyParams(desc);
+    else
+        die("Unrecognized triplewise interaction type '%s'", type.c_str());
+
+    desc.checkAllRead();
+    return createInteractionTriplewise(state, std::move(name), rc, varParams);
 }
 
 std::shared_ptr<ObjectRodBindingInteraction>

@@ -21,8 +21,10 @@ Interaction::~Interaction() = default;
 
 void Interaction::setPrerequisites(__UNUSED ParticleVector *pv1,
                                    __UNUSED ParticleVector *pv2,
+                                   __UNUSED ParticleVector *pv3,
                                    __UNUSED CellList *cl1,
-                                   __UNUSED CellList *cl2)
+                                   __UNUSED CellList *cl2,
+                                   __UNUSED CellList *cl3)
 {}
 
 std::vector<Interaction::InteractionChannel> Interaction::getInputChannels() const

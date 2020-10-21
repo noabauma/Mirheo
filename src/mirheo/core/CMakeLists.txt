@@ -28,6 +28,8 @@ set(sources_cpp
   interactions/rod/base_rod.cpp
   interactions/utils/parameters_wrap.cpp
   interactions/utils/step_random_gen.cpp
+  interactions/triplewise/base_triplewise.cpp
+  interactions/triplewise/factory_helper.cpp
   logger.cpp
   managers/interactions.cpp
   marching_cubes.cpp
@@ -109,6 +111,7 @@ set(sources_cu
   interactions/obj_rod_binding.cu
   interactions/pairwise/factory.cu
   interactions/rod/factory.cu
+  interactions/triplewise/factory.cu
   object_belonging/mesh_belonging.cu
   object_belonging/object_belonging.cu
   object_belonging/rod_belonging.cu

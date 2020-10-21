@@ -1,12 +1,13 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #include <mirheo/core/pvs/particle_vector.h>
 
-#include <mirheo/core/interactions/pairwise/base_pairwise.h>
 #include <mirheo/core/interactions/factory.h>
 #include <mirheo/core/interactions/interface.h>
 #include <mirheo/core/interactions/membrane/base_membrane.h>
 #include <mirheo/core/interactions/obj_rod_binding.h>
+#include <mirheo/core/interactions/pairwise/base_pairwise.h>
 #include <mirheo/core/interactions/rod/base_rod.h>
+#include <mirheo/core/interactions/triplewise/base_triplewise.h>
 
 #include "bindings.h"
 #include "class_wrapper.h"
@@ -65,6 +66,14 @@ createPairwiseInteraction(const MirState *state, const std::string& name,
 {
     auto parameters = castToMap(kwargs, name);
     return interaction_factory::createPairwiseInteraction(state, name, rc, kind, parameters);
+}
+
+static std::shared_ptr<BaseTriplewiseInteraction>
+createTriplewiseInteraction(const MirState *state, const std::string& name,
+                            real rc, const std::string& kind, py::kwargs kwargs)
+{
+    auto parameters = castToMap(kwargs, name);
+    return interaction_factory::createTriplewiseInteraction(state, name, rc, kind, parameters);
 }
 
 void exportInteractions(py::module& m)
@@ -510,6 +519,42 @@ void exportInteractions(py::module& m)
              The interaction can support multiple polymorphic states if **kappa0**, **tau0** and **E0** are lists of equal size.
              In this case, the **E0** parameter is required.
              Only lists of 1, 2 and 11 states are supported.
+    )");
+
+
+    py::handlers_class<BaseTriplewiseInteraction> pyIntTriplewise(m, "Triplewise", pyInt, R"(
+        Generic triplewise interaction class.
+        Can be applied between any kind of :any:`ParticleVector` classes.
+        The following interactions are currently implemented:
+
+
+        * **Dummy**:
+            A dummy constant force in x-direction, for testing purposes.
+
+            .. math::
+
+                \mathbf{F}_{ij} &= \varepsilon \mathbf{\hat{x}}
+
+        * **SW**:
+            **TODO**
+    )");
+
+    pyIntTriplewise.def(py::init(&createTriplewiseInteraction),
+                        "state"_a, "name"_a, "rc"_a, "kind"_a, R"(
+            Args:
+                name: name of the interaction
+                rc: interaction cut-off (no forces between particles further than **rc** apart)
+                kind: interaction kind (e.g. SW). See below for all possibilities.
+
+            Create one triplewise interaction handler of kind **kind**.
+
+            * **kind** = "Dummy"
+
+                * **epsilon**: :math:`\varepsilon`
+
+            * **kind** = "SW"
+
+                **TODO**
     )");
 }
 

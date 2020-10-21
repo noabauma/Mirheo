@@ -76,7 +76,8 @@ public:
 
     ~PairwiseInteraction() = default;
 
-    void setPrerequisites(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2) override
+    void setPrerequisites(ParticleVector *pv1, ParticleVector *pv2, __UNUSED ParticleVector *pv3,
+                          CellList *cl1, CellList *cl2, __UNUSED CellList *cl3) override
     {
         if (outputsDensity <PairwiseKernel>::value ||
             requiresDensity<PairwiseKernel>::value   )
@@ -89,7 +90,8 @@ public:
         }
     }
 
-    void local(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2, cudaStream_t stream) override
+    void local(ParticleVector *pv1, ParticleVector *pv2, __UNUSED ParticleVector *pv3,
+               CellList *cl1, CellList *cl2, __UNUSED CellList *cl3, cudaStream_t stream) override
     {
         // if (pv1->local()->size() < pv2->local()->size())
         _computeLocal(pv1, pv2, cl1, cl2, stream);
@@ -97,7 +99,8 @@ public:
         //    computeLocal(pv2, pv1, cl2, cl1, state->currentTime, stream);
     }
 
-    void halo(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2, cudaStream_t stream) override
+    void halo(ParticleVector *pv1, ParticleVector *pv2, __UNUSED ParticleVector *pv3,
+              CellList *cl1, CellList *cl2, __UNUSED CellList *cl3, cudaStream_t stream) override
     {
         const bool isov1 = dynamic_cast<ObjectVector *>(pv1) != nullptr;
         const bool isov2 = dynamic_cast<ObjectVector *>(pv2) != nullptr;

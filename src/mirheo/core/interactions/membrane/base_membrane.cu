@@ -50,8 +50,8 @@ BaseMembraneInteraction::BaseMembraneInteraction(const MirState *state, Loader& 
 BaseMembraneInteraction::~BaseMembraneInteraction() = default;
 
 
-void BaseMembraneInteraction::setPrerequisites(ParticleVector *pv1, ParticleVector *pv2,
-                                               __UNUSED  CellList *cl1, __UNUSED  CellList *cl2)
+void BaseMembraneInteraction::setPrerequisites(ParticleVector *pv1, ParticleVector *pv2, __UNUSED ParticleVector *pv3,
+                                               __UNUSED CellList *cl1, __UNUSED CellList *cl2, __UNUSED CellList *cl3)
 {
     if (pv1 != pv2)
         die("Internal membrane forces can't be computed between two different particle vectors");
@@ -68,8 +68,10 @@ void BaseMembraneInteraction::setPrerequisites(ParticleVector *pv1, ParticleVect
 
 void BaseMembraneInteraction::halo(ParticleVector *pv1,
                                    __UNUSED ParticleVector *pv2,
+                                   __UNUSED ParticleVector *pv3,
                                    __UNUSED CellList *cl1,
                                    __UNUSED CellList *cl2,
+                                   __UNUSED CellList *cl3,
                                    __UNUSED cudaStream_t stream)
 {
     debug("Not computing internal membrane forces between local and halo membranes of '%s'",
