@@ -56,7 +56,6 @@ class PintUnitsConverter:
             try:
                 ureg.default_system = self.UNIT_SYSTEM_NAME
                 out = value.to_base_units().magnitude
-                print(value, out)
                 return out
             finally:
                 ureg.default_system = old
