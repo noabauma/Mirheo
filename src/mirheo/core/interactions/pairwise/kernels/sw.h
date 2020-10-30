@@ -12,7 +12,7 @@
 #include "interface.h"
 #include "parameters.h"
 
-#include <mirheo/core/utils/cuda_common.h>      //math::exp()
+#include <mirheo/core/utils/cuda_common.h>      //math::exp(), math:sqrt()
 
 namespace mirheo
 {
@@ -51,10 +51,11 @@ public:
 
         const real rs2 = (sigma_*sigma_) / dr2;
         const real B_rs4 = B_*rs2 * rs2;
-        const real r_rc = math::sqrt(dr2) - rc_;
+        const real dr_ = math::sqrt(dr2);
+        const real r_rc = dr_ - rc_;
         const real exp = math::exp(sigma_ / r_rc);
         const real A_eps_exp = A_*epsilon_*exp;
-        const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*math::sqrt(dr2)) + (4.0_r*B_rs4*A_eps_exp)/dr2;
+        const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*dr_) + (4.0_r*B_rs4*A_eps_exp)/dr2;
 
         return phi * dr;
     }
