@@ -256,7 +256,9 @@ interaction_factory::createTriplewiseInteraction(const MirState *state, std::str
     ParametersWrap desc {parameters};
     VarTriplewiseParams varParams;
 
-    if (type == "Dummy")
+    if(type == "SW3")
+        varParams = factory_helper::readSW3Params(desc);
+    else if (type == "Dummy")
         varParams = factory_helper::readDummyParams(desc);
     else
         die("Unrecognized triplewise interaction type '%s'", type.c_str());

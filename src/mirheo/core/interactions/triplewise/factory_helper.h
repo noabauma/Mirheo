@@ -11,7 +11,10 @@ namespace mirheo
 namespace factory_helper
 {
 
+SW3Params readSW3Params(ParametersWrap &params);
+
 DummyParams readDummyParams(ParametersWrap &params);
+
 
 } // namespace factory_helper
 

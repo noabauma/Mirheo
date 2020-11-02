@@ -3,6 +3,7 @@
 
 #include "triplewise.h"
 
+#include "kernels/sw.h"
 #include "kernels/dummy.h"
 
 #include <mirheo/core/utils/variant_foreach.h>
@@ -49,12 +50,14 @@ loadInteractionTriplewise(const MirState *state, Loader& loader, const ConfigObj
 {
     static_assert(std::is_same<
             VarTriplewiseParams,
-            mpark::variant<DummyParams>>::value,
+            mpark::variant<SW3Params, DummyParams>>::value,
             "Load interactions must be updated if VarTriplewiseParams is changed.");
 
     const std::string& typeName = config["__type"].getString();
     TriplewiseFactoryVisitor visitor{state, loader, config, typeName, nullptr};
-
+    
+    // SW 3Body
+    tryLoadTriplewise<SW3Params::KernelType>(visitor);
     // Dummy.
     tryLoadTriplewise<DummyParams::KernelType>(visitor);
 

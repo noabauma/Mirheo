@@ -9,10 +9,21 @@ namespace mirheo
 {
 
 // forward declaration of triplewise kernels
+class SW3;
 class TriplewiseDummy;
 
-class SW3;
 
+struct SW3Params
+{
+    using KernelType = SW3;
+    real lambda;
+    real epsilon;
+    real theta;
+    real gamma;
+    real sigma;
+
+};
+MIRHEO_MEMBER_VARS(SW3Params, lambda, epsilon, theta, gamma, sigma);
 
 /// parameters of the dummy interaction
 struct DummyParams
@@ -22,14 +33,8 @@ struct DummyParams
 };
 MIRHEO_MEMBER_VARS(DummyParams, epsilon);
 
-struct SW3Params
-{
-    using KernelType = SW3;
-
-};
-MIRHEO_MEMBER_VARS(SW3Params, )
 
 /// variant of all possible triplewise interactions
-using VarTriplewiseParams = mpark::variant<DummyParams>;
+using VarTriplewiseParams = mpark::variant<SW3Params, DummyParams>;
 
 } // namespace mirheo
