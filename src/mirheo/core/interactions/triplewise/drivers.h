@@ -4,6 +4,7 @@
 // FIXME: Move type_traits to interactions/type_traits.h?
 #include <mirheo/core/interactions/pairwise/kernels/type_traits.h>
 
+#include <mirheo/core/datatypes.h>  //real3
 #include <mirheo/core/celllist.h>
 #include <mirheo/core/utils/cuda_common.h>
 #include <mirheo/core/pvs/views/pv.h>
@@ -29,6 +30,7 @@ __launch_bounds__(128, 16)
 __global__ void computeTriplewiseSelfInteractions(
         CellListInfo cinfo, typename Handler::ViewType view, Handler handler)
 {
+    /*
     (void)cinfo;
     (void)view;
     (void)handler;
@@ -36,9 +38,68 @@ __global__ void computeTriplewiseSelfInteractions(
     if (blockIdx.x == 0 && threadIdx.x == 0) {
         printf("Hello from computeTriplewiseSelfInteraction view.size=%d\n",
                view.size);
-    }
+    }*/
 
     // TODO
+    const int dstId = blockIdx.x*blockDim.x + threadIdx.x;
+    if (dstId >= view.size) return;
+
+    const auto dstP = handler.read(view, dstId);
+
+    real3 frc_ = make_real3(0.0_r);
+
+    //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have accumulator
+
+    const int3 cell0 = cinfo.getCellIdAlongAxes(interaction.getPosition(dstP));
+
+    for (int cellZ = cell0.z-1; cellZ <= cell0.z+1; cellZ++)
+    {
+        for (int cellY = cell0.y-1; cellY <= cell0.y+1; cellY++)
+        {
+            if ( !(cellY >= 0 && cellY < cinfo.ncells.y && cellZ >= 0 && cellZ < cinfo.ncells.z) ) continue;
+
+            const int midCellId = cinfo.encode(cell0.x, cellY, cellZ);
+            const int rowStart  = math::max(midCellId-1, 0);
+            const int rowEnd    = math::min(midCellId+2, cinfo.totcells);
+
+            const int pstart = cinfo.cellStarts[rowStart];
+            const int pend   = cinfo.cellStarts[rowEnd];
+
+            Handler::ParticleType srcP1, srcP2;
+            for (int srcId1 = pstart; srcId < pend; srcId1++)
+            {
+                handler.readCoordinates(srcP1, view, srcId1);
+                bool interacting_01 = handler.withinCutoff(dstP, srcP1);
+                for (int srcId2 = srcId1 + 1; srcId2 < pend; srcId2++){
+                    
+                    handler.readCoordinates(srcP2, view, srcId2);
+                    
+                    
+
+                    bool interacting_20 = handler.withinCutoff(dstP , srcP2);
+                    bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
+
+
+                    if ((interacting_01 && interacting_20) || (interacting_12 && interacting_01) || (interacting_12 && interacting_20)) //atleast 2 vector's should be close
+                    {
+                        //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
+
+                        const auto val = handler(dstP, dstId, srcP, srcId);
+
+                        frc_ += val[0];
+                        /*
+                        if (NeedDstOutput == InteractionOutMode::NeedOutput)
+                            accumulator.add(val[0]);
+
+                        if (NeedSrcOutput == InteractionOutMode::NeedOutput)
+                            accumulator.atomicAddToSrc(val, srcView, srcId);
+                        */
+                    }
+                }
+            }
+        }
+    }
+    atomicAdd(view.forces + dstId, frc_);
 }
 
 } // namespace mirheo

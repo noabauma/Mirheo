@@ -1,6 +1,9 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #pragma once
 
+//maybe fix
+#include <mirheo/core/interactions/pairwise/kernels/fetchers.h>
+
 #include "interface.h"
 #include "parameters.h"
 
@@ -10,13 +13,14 @@
 namespace mirheo
 {
 
-struct SW3Handler
+class SW3Handler : public ParticleFetcher
 {
+public:
     using ViewType = PVview;
     using ParticleType = Particle;
 
     SW3Handler(real rc, real lambda, real epsilon, real theta, real gamma, real sigma) : 
-        rc_(rc),
+        ParticleFetcher(rc),
         rc2_(rc * rc), 
         lambda_epsilon_(lambda*epsilon),
         cos_theta_(math::cos(theta)),   //theta = 1.910633236 -> cos(theta) ~ -1/3
@@ -92,7 +96,7 @@ struct SW3Handler
                 return {-h_ikj_i, -h_ikj_j, -h_ikj_k};
             }else{                                  //(ij, jk, ki): (n,y,n),(n,n,y),(n,n,n)
                 const real3 zero = make_real3(0.0_r);        
-                return {zero, zero, zero};
+                return {zero, zero, zero};          //shouldn't make it to this point
             }
         }else if(dr_jk2 >= rc2_ && dr_ki2 >= rc2_){ //(ij, jk, ki): (y,n,n)
             const real3 zero = make_real3(0.0_r);        
@@ -108,8 +112,7 @@ struct SW3Handler
         }
     }
 
-    real rc_;
-    real rc2_;
+private:
     real lambda_epsilon_;
     real cos_theta_;
     real gamma_sigma_;

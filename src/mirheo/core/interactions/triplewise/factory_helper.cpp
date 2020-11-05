@@ -14,7 +14,7 @@ SW3Params readSW3Params(ParametersWrap &desc)
     p.epsilon = desc.read<real>("epsilon");
     p.theta = desc.read<real>("theta");
     p.gamma = desc.read<real>("gamma");
-    p.sigma = desc.real<real>("sigma");
+    p.sigma = desc.read<real>("sigma");
     return p;
 }
 

@@ -80,7 +80,7 @@ public:
     void local(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
                CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream) override
     {
-        _computeLocal(pv1, pv2, pv3, cl1, cl2, cl3, stream);
+        _computeLocalLocalLocal(pv1, pv2, pv3, cl1, cl2, cl3, stream);
     }
 
     void halo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
@@ -180,7 +180,7 @@ private:
     /** \brief Compute forces between all the triples of particles that are closer
         than rc to each other.
     */
-    void _computeLocal(ParticleVector* pv1, ParticleVector* pv2, ParticleVector* pv3,
+    void _computeLocalLocalLocal(ParticleVector* pv1, ParticleVector* pv2, ParticleVector* pv3,
                        CellList* cl1, CellList* cl2, CellList* cl3, cudaStream_t stream)
     {
         using ViewType = typename TriplewiseKernel::ViewType;
