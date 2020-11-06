@@ -1,18 +1,22 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #pragma once
 
+//maybe fix
+#include <mirheo/core/interactions/pairwise/kernels/fetchers.h>
+
 #include "interface.h"
 #include "parameters.h"
 
 namespace mirheo
 {
 
-struct TriplewiseDummyHandler
+class TriplewiseDummyHandler : public ParticleFetcher
 {
+public:
     using ViewType = PVview;
     using ParticleType = Particle;
 
-    TriplewiseDummyHandler(real rc, real epsilon) : rc2_(rc * rc), epsilon_(epsilon) { }
+    TriplewiseDummyHandler(real rc, real epsilon) : ParticleFetcher(rc), epsilon_(epsilon) { }
 
     __D__ inline real3 operator()(ParticleType p, ParticleType pA, ParticleType pB, int id, int idA, int idB) const
     {
@@ -25,8 +29,7 @@ struct TriplewiseDummyHandler
 
         return make_real3(epsilon_, 0.0_r, 0.0_r);
     }
-
-    real rc2_;
+private:
     real epsilon_;
 };
 

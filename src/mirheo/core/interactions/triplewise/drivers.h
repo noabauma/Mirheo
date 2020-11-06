@@ -4,6 +4,8 @@
 // FIXME: Move type_traits to interactions/type_traits.h?
 #include <mirheo/core/interactions/pairwise/kernels/type_traits.h>
 
+#include <array>
+
 #include <mirheo/core/datatypes.h>  //real3
 #include <mirheo/core/celllist.h>
 #include <mirheo/core/utils/cuda_common.h>
@@ -50,7 +52,7 @@ __global__ void computeTriplewiseSelfInteractions(
 
     //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have accumulator
 
-    const int3 cell0 = cinfo.getCellIdAlongAxes(interaction.getPosition(dstP));
+    const int3 cell0 = cinfo.getCellIdAlongAxes(handler.getPosition(dstP));
 
     for (int cellZ = cell0.z-1; cellZ <= cell0.z+1; cellZ++)
     {
@@ -65,16 +67,15 @@ __global__ void computeTriplewiseSelfInteractions(
             const int pstart = cinfo.cellStarts[rowStart];
             const int pend   = cinfo.cellStarts[rowEnd];
 
-            Handler::ParticleType srcP1, srcP2;
-            for (int srcId1 = pstart; srcId < pend; srcId1++)
+            typename Handler::ParticleType srcP1, srcP2;
+            for (int srcId1 = pstart; srcId1 < pend; srcId1++)
             {
                 handler.readCoordinates(srcP1, view, srcId1);
                 bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                for (int srcId2 = srcId1 + 1; srcId2 < pend; srcId2++){
+                for (int srcId2 = srcId1 + 1; srcId2 < pend; srcId2++)
+                {
                     
                     handler.readCoordinates(srcP2, view, srcId2);
-                    
-                    
 
                     bool interacting_20 = handler.withinCutoff(dstP , srcP2);
                     bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
@@ -84,7 +85,7 @@ __global__ void computeTriplewiseSelfInteractions(
                     {
                         //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
 
-                        const auto val = handler(dstP, dstId, srcP, srcId);
+                        const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
 
                         frc_ += val[0];
                         /*

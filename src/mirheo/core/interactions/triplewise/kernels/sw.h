@@ -21,7 +21,6 @@ public:
 
     SW3Handler(real rc, real lambda, real epsilon, real theta, real gamma, real sigma) : 
         ParticleFetcher(rc),
-        rc2_(rc * rc), 
         lambda_epsilon_(lambda*epsilon),
         cos_theta_(math::cos(theta)),   //theta = 1.910633236 -> cos(theta) ~ -1/3
         gamma_sigma_(gamma*sigma)
