@@ -3,6 +3,7 @@
 
 //maybe fix
 #include <mirheo/core/interactions/pairwise/kernels/fetchers.h>
+#include <array>
 
 #include "interface.h"
 #include "parameters.h"
@@ -18,16 +19,17 @@ public:
 
     TriplewiseDummyHandler(real rc, real epsilon) : ParticleFetcher(rc), epsilon_(epsilon) { }
 
-    __D__ inline real3 operator()(ParticleType p, ParticleType pA, ParticleType pB, int id, int idA, int idB) const
+    __D__ inline std::array<real3, 3> operator()(ParticleType p, ParticleType pA, ParticleType pB, int id, int idA, int idB) const
     {
         const real3 drA = p.r - pA.r;
         const real3 drB = p.r - pB.r;
         const real drA2 = dot(drA, drA);
         const real drB2 = dot(drB, drB);
+        const real3 zero = make_real3(0.0_r);        
         if (drA2 >= rc2_ || drB2 >= rc2_)
-            return make_real3(0.0_r);
-
-        return make_real3(epsilon_, 0.0_r, 0.0_r);
+            return {zero, zero, zero};
+        
+        return {make_real3(epsilon_, 0.0_r, 0.0_r), zero, zero};
     }
 private:
     real epsilon_;

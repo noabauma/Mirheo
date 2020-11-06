@@ -32,17 +32,7 @@ __launch_bounds__(128, 16)
 __global__ void computeTriplewiseSelfInteractions(
         CellListInfo cinfo, typename Handler::ViewType view, Handler handler)
 {
-    /*
-    (void)cinfo;
-    (void)view;
-    (void)handler;
 
-    if (blockIdx.x == 0 && threadIdx.x == 0) {
-        printf("Hello from computeTriplewiseSelfInteraction view.size=%d\n",
-               view.size);
-    }*/
-
-    // TODO
     const int dstId = blockIdx.x*blockDim.x + threadIdx.x;
     if (dstId >= view.size) return;
 
@@ -81,7 +71,7 @@ __global__ void computeTriplewiseSelfInteractions(
                     bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
 
 
-                    if ((interacting_01 && interacting_20) || (interacting_12 && interacting_01) || (interacting_12 && interacting_20)) //atleast 2 vector's should be close
+                    if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
                     {
                         //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
 
