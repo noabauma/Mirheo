@@ -80,7 +80,7 @@ public:
     void local(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
                CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream) override
     {
-        _computeLocalLocalLocal(pv1, pv2, pv3, cl1, cl2, cl3, stream);
+        _computeLocal(pv1, pv2, pv3, cl1, cl2, cl3, stream);
     }
 
     void halo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
@@ -180,7 +180,7 @@ private:
     /** \brief Compute forces between all the triples of particles that are closer
         than rc to each other.
     */
-    void _computeLocalLocalLocal(ParticleVector* pv1, ParticleVector* pv2, ParticleVector* pv3,
+    void _computeLocal(ParticleVector* pv1, ParticleVector* pv2, ParticleVector* pv3,
                        CellList* cl1, CellList* cl2, CellList* cl3, cudaStream_t stream)
     {
         using ViewType = typename TriplewiseKernel::ViewType;
@@ -210,14 +210,28 @@ private:
     /** \brief Compute halo forces */
     void _computeHalo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3, CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream)
     {
-        (void)pv1;
-        (void)pv2;
-        (void)pv3;
-        (void)cl1;
-        (void)cl2;
-        (void)cl3;
-        (void)stream;
-        // TODO
+        using ViewType = typename TriplewiseKernel::ViewType;
+        kernel_.setup(pv1->local(), pv2->local(), pv3->local(), cl1, cl2, cl3, getState()); //this needs to be changed when computeTriplewiseExternalInteractions is implemented
+
+        /*  Self interaction */
+        if (pv1 == pv2 && pv2 == pv3 && pv3 == pv1)
+        {
+            auto view = cl1->getView<ViewType>();
+            const int np = view.size;
+            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np);
+
+            const int nth = 128;
+
+            auto cinfo = cl1->cellInfo();
+            SAFE_KERNEL_LAUNCH(
+                 computeTriplewiseSelfInteractions,
+                 getNblocks(np, nth), nth, 0, stream,
+                 cinfo, view, kernel_.handler());
+        }
+        else /*  External interaction */
+        {
+            die("3-body interactions with two or three different PVs not implemented.");
+        }
     }
 
 private:
