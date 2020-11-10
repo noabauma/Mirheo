@@ -39,6 +39,7 @@ __global__ void computeTriplewiseSelfInteractions(
     const auto dstP = handler.read(view, dstId);
 
     real3 frc_ = make_real3(0.0_r);
+    
     typename Handler::ParticleType srcP1, srcP2;
 
     //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have an accumulator
