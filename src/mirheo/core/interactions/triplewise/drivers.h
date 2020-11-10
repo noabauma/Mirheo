@@ -39,57 +39,113 @@ __global__ void computeTriplewiseSelfInteractions(
     const auto dstP = handler.read(view, dstId);
 
     real3 frc_ = make_real3(0.0_r);
+    typename Handler::ParticleType srcP1, srcP2;
 
-    //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have accumulator
+    //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have an accumulator
 
     const int3 cell0 = cinfo.getCellIdAlongAxes(handler.getPosition(dstP));
 
-    for (int cellZ = cell0.z-1; cellZ <= cell0.z+1; cellZ++)
+    const int cellZMin = math::max(cell0.y-1, 0);
+    const int cellZMax = math::min(cell0.z+1, cinfo.ncells.z-1);
+    const int cellYMin = math::max(cell0.y-1, 0);
+    const int cellYMax = math::min(cell0.y+1, cinfo.ncells.y-1);
+    const int cellXMin = math::max(cell0.x-1, 0);
+    const int cellXMax = math::min(cell0.x+2, cinfo.ncells.x);
+
+    for (int cellZ1 = cellZMin; cellZ1 <= cellZMax; ++cellZ1)
     {
-        for (int cellY = cell0.y-1; cellY <= cell0.y+1; cellY++)
+        for (int cellY1 = cellYMin; cellY1 <= cellYMax; ++cellY1)
         {
-            if ( !(cellY >= 0 && cellY < cinfo.ncells.y && cellZ >= 0 && cellZ < cinfo.ncells.z) ) continue;
+            const int rowStart1 = cinfo.encode(cellXMin, cellY1, cellZ1);
+            const int rowEnd1 = cinfo.encode(cellXMax, cellY1, cellZ1);
 
-            const int midCellId = cinfo.encode(cell0.x, cellY, cellZ);
-            const int rowStart  = math::max(midCellId-1, 0);
-            const int rowEnd    = math::min(midCellId+2, cinfo.totcells);
+            const int pstart1 = cinfo.cellStarts[rowStart1];
+            const int pend1   = cinfo.cellStarts[rowEnd1];
 
-            const int pstart = cinfo.cellStarts[rowStart];
-            const int pend   = cinfo.cellStarts[rowEnd];
-
-            typename Handler::ParticleType srcP1, srcP2;
-            for (int srcId1 = pstart; srcId1 < pend; srcId1++)
+            for (int cellZ2 = cellZ1; cellZ2 <= cellZMax; ++cellZ2)
             {
-                handler.readCoordinates(srcP1, view, srcId1);
-                bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                for (int srcId2 = srcId1 + 1; srcId2 < pend; srcId2++)
+                for (int cellY2 = cellY1; cellY2 <= cellYMax; ++cellY2)
                 {
-                    
-                    handler.readCoordinates(srcP2, view, srcId2);
-
-                    bool interacting_20 = handler.withinCutoff(dstP , srcP2);
-                    bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
-
-
-                    if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
+                    if((cellZ1 == cellZ2) && (cellY1 == cellY2))    //if they are in the same cell, do upper-matrix loop
                     {
-                        //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
+                        //const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
+                        const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
 
-                        const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
+                        //const int pstart2 = cinfo.cellStarts[rowStart2];
+                        const int pend2   = cinfo.cellStarts[rowEnd2];
+                        
+                        for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
+                        {
+                            handler.readCoordinates(srcP1, view, srcId1);
+                            bool interacting_01 = handler.withinCutoff(dstP, srcP1);
+                            for (int srcId2 = srcId1 + 1; srcId2 < pend2; ++srcId2)
+                            {
+                                
+                                handler.readCoordinates(srcP2, view, srcId2);
 
-                        frc_ += val[0];
-                        /*
-                        if (NeedDstOutput == InteractionOutMode::NeedOutput)
-                            accumulator.add(val[0]);
+                                bool interacting_20 = handler.withinCutoff(dstP , srcP2);
+                                bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
 
-                        if (NeedSrcOutput == InteractionOutMode::NeedOutput)
-                            accumulator.atomicAddToSrc(val, srcView, srcId);
-                        */
+                                if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
+                                {
+                                    //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
+
+                                    const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
+
+                                    frc_ += val[0];
+                                    /*
+                                    if (NeedDstOutput == InteractionOutMode::NeedOutput)
+                                        accumulator.add(val[0]);
+
+                                    if (NeedSrcOutput == InteractionOutMode::NeedOutput)
+                                        accumulator.atomicAddToSrc(val, srcView, srcId);
+                                    */
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
-    }
+                    else    //O(N^2) go throw all 
+                    {
+                        const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
+                        const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
+
+                        const int pstart2 = cinfo.cellStarts[rowStart2];
+                        const int pend2   = cinfo.cellStarts[rowEnd2];
+                        
+                        for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
+                        {
+                            handler.readCoordinates(srcP1, view, srcId1);
+                            bool interacting_01 = handler.withinCutoff(dstP, srcP1);
+                            for (int srcId2 = pstart2; srcId2 < pend2; ++srcId2)
+                            {
+                                
+                                handler.readCoordinates(srcP2, view, srcId2);
+
+                                bool interacting_20 = handler.withinCutoff(dstP , srcP2);
+                                bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
+
+                                if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
+                                {
+                                    //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
+
+                                    const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
+
+                                    frc_ += val[0];
+                                    /*
+                                    if (NeedDstOutput == InteractionOutMode::NeedOutput)
+                                        accumulator.add(val[0]);
+
+                                    if (NeedSrcOutput == InteractionOutMode::NeedOutput)
+                                        accumulator.atomicAddToSrc(val, srcView, srcId);
+                                    */
+                                }
+                            }
+                        }
+                    } //else
+                } //cellY2
+            } //cellZ2
+        } //cellY1
+    } //cellZ1
     atomicAdd(view.forces + dstId, frc_);
 }
 
