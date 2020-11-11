@@ -28,10 +28,10 @@ def main():
 
     #Output should be n(n-1)(n-2)/6 * epsilon  per step (with n = #particles)
     dump_every = 1
-    u.registerPlugins(mir.Plugins.createForceSaver('force', pv))
+    u.registerPlugins(mir.Plugins.createForceSaver('forces', pv))
     u.registerPlugins(mir.Plugins.createDumpParticles('force_dump', pv, dump_every, ["forces"], 'h5/pv-'))
 
-    u.run(1, dt=0.0001)
+    u.run(2, dt=0.0001)
 
 
 main()

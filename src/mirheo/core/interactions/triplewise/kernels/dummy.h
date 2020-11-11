@@ -21,14 +21,18 @@ public:
 
     __D__ inline std::array<real3, 3> operator()(ParticleType p, ParticleType pA, ParticleType pB, int id, int idA, int idB) const
     {
-        const real3 drA = p.r - pA.r;
-        const real3 drB = p.r - pB.r;
-        const real drA2 = dot(drA, drA);
-        const real drB2 = dot(drB, drB);
-        const real3 zero = make_real3(0.0_r);        
-        if (drA2 >= rc2_ || drB2 >= rc2_)
+        //this will be already calculated in driver.h
+        /*
+        const real3 drA  = p.r - pA.r;
+        const real3 drB  = p.r - pB.r;
+        const real3 drAB = pA.r - pB.r;
+        const real drA2  = dot(drA, drA);
+        const real drB2  = dot(drB, drB);
+        const real drAB2 = dot(drAB, drAB);
+        if (drA2 >= rc2_ || drB2 >= rc2_ || drAB2 >= rc2_)
             return {zero, zero, zero};
-        
+        */
+        const real3 zero = make_real3(0.0_r);        
         return {make_real3(epsilon_, 0.0_r, 0.0_r), zero, zero};
     }
 private:

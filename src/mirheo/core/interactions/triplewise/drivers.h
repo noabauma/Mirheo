@@ -70,18 +70,21 @@ __global__ void computeTriplewiseSelfInteractions(
                     if((cellZ1 == cellZ2) && (cellY1 == cellY2))    //if they are in the same cell, do upper-matrix loop
                     {
                         //const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
-                        const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
+                        //const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
 
                         //const int pstart2 = cinfo.cellStarts[rowStart2];
-                        const int pend2   = cinfo.cellStarts[rowEnd2];
+                        //const int pend2   = cinfo.cellStarts[rowEnd2];
                         
                         for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
                         {
                             handler.readCoordinates(srcP1, view, srcId1);
                             bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                            for (int srcId2 = srcId1 + 1; srcId2 < pend2; ++srcId2)
+                            for (int srcId2 = srcId1 + 1; srcId2 < pend1; ++srcId2)
                             {
-                                
+                                if((dstId == srcId1) || (dstId == srcId2)) continue;
+                                if(dstId == 0){
+                                    printf("(%i,%i,%i) ", dstId, srcId1, srcId2);
+                                }
                                 handler.readCoordinates(srcP2, view, srcId2);
 
                                 bool interacting_20 = handler.withinCutoff(dstP , srcP2);
@@ -119,7 +122,8 @@ __global__ void computeTriplewiseSelfInteractions(
                             bool interacting_01 = handler.withinCutoff(dstP, srcP1);
                             for (int srcId2 = pstart2; srcId2 < pend2; ++srcId2)
                             {
-                                
+                                if((dstId == srcId1) || (dstId == srcId2)) continue;
+
                                 handler.readCoordinates(srcP2, view, srcId2);
 
                                 bool interacting_20 = handler.withinCutoff(dstP , srcP2);
