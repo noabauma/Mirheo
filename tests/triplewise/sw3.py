@@ -11,10 +11,17 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
+np.random.seed(int(sys.argv[1]))
 
 def main():
-    particles = np.loadtxt("particles.csv", delimiter=',')
-    velo = np.zeros((particles.shape[0],3))
+    if(len(sys.argv) < 3):
+        print("needs seed(int) & #particles(int) \n")
+        sys.exit(0)
+    n = int(sys.argv[2])
+
+    particles = np.random.rand(n, 3) + np.full((n, 3), 5.0)
+    if(rank == 0): print("particles:\n", particles)
+    velo = np.zeros((n,3))
 
     domain = (10.0, 10.0, 10.0)
     u = mir.Mirheo((1, 1, 1), domain, debug_level=3, log_filename='log', no_splash=True)
@@ -23,22 +30,22 @@ def main():
     ic = mir.InitialConditions.FromArray(pos=particles, vel=velo)
     u.registerParticleVector(pv, ic)
 
-    dummy = mir.Interactions.Triplewise('interaction', rc=1.0, kind='Dummy', epsilon=10.0)
-    u.registerInteraction(dummy)
-    u.setInteraction(dummy, pv, pv, pv)
+    sw3 = mir.Interactions.Triplewise('interaction', rc=2.0, kind='SW3', lambda_=23.15, epsilon=6.189, theta=1.910633236, gamma=1.2, sigma=2.3925)
+    u.registerInteraction(sw3)
+    u.setInteraction(sw3, pv, pv, pv)
 
     vv = mir.Integrators.VelocityVerlet('vv')
     u.registerIntegrator(vv)
     u.setIntegrator(vv, pv)
 
-    #Output should be (n-1)(n-2)/2 * epsilon (with n = #particles)
+
     dump_every = 1
     u.registerPlugins(mir.Plugins.createForceSaver('forces', pv))
-    u.registerPlugins(mir.Plugins.createDumpParticles('force_dump', pv, dump_every, ["forces"], 'h5/dummy-'))
+    u.registerPlugins(mir.Plugins.createDumpParticles('force_dump', pv, dump_every, ["forces"], 'h5/sw3-'))
 
     u.run(2, dt=0.0001)
 
-    f = h5py.File('h5/dummy-00001.h5', 'r')
+    f = h5py.File('h5/sw3-00001.h5', 'r')
     forces = f['forces']
     if(rank == 0):
         print("forces:\n", forces[()])
@@ -46,6 +53,6 @@ def main():
 
 main()
 
-# nTEST: triplewise.dummy
+# nTEST: triplewise.sw3
 # cd triplewise
-# mir.run --runargs "-n 2" ./dummy.py > dummy.out.txt
+# mir.run --runargs "-n 2" ./sw3.py > sw3.out.txt

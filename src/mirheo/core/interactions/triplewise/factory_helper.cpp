@@ -10,7 +10,7 @@ namespace factory_helper
 SW3Params readSW3Params(ParametersWrap &desc)
 {
     SW3Params p;
-    p.lambda = desc.read<real>("lambda");
+    p.lambda = desc.read<real>("lambda_");
     p.epsilon = desc.read<real>("epsilon");
     p.theta = desc.read<real>("theta");
     p.gamma = desc.read<real>("gamma");
