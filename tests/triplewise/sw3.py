@@ -14,13 +14,15 @@ rank = comm.Get_rank()
 np.random.seed(int(sys.argv[1]))
 
 def main():
-    if(len(sys.argv) < 3):
+    if len(sys.argv) < 3:
         print("needs seed(int) & #particles(int) \n")
         sys.exit(0)
     n = int(sys.argv[2])
 
     particles = np.random.rand(n, 3) + np.full((n, 3), 5.0)
-    if(rank == 0): print("particles:\n", particles)
+    if rank == 0: 
+        print("particles:\n", particles)
+    
     velo = np.zeros((n,3))
 
     domain = (10.0, 10.0, 10.0)
@@ -47,7 +49,7 @@ def main():
 
     f = h5py.File('h5/sw3-00001.h5', 'r')
     forces = f['forces']
-    if(rank == 0):
+    if rank == 0:
         print("forces:\n", forces[()])
 
 

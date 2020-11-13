@@ -40,7 +40,7 @@ def main():
 
     f = h5py.File('h5/dummy-00001.h5', 'r')
     forces = f['forces']
-    if(rank == 0):
+    if rank == 0:
         print("forces:\n", forces[()])
 
 
