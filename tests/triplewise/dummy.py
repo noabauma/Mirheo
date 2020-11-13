@@ -5,6 +5,12 @@
 import mirheo as mir
 import numpy as np
 import sys
+import h5py
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+
 
 def main():
     particles = np.loadtxt("particles.csv", delimiter=',')
@@ -32,6 +38,11 @@ def main():
     u.registerPlugins(mir.Plugins.createDumpParticles('force_dump', pv, dump_every, ["forces"], 'h5/pv-'))
 
     u.run(2, dt=0.0001)
+
+    f = h5py.File('h5/pv-00001.h5', 'r')
+    forces = f['forces']
+    if(rank == 0):
+        print(forces[()])
 
 
 main()

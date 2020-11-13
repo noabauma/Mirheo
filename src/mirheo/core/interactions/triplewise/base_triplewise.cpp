@@ -19,7 +19,7 @@ BaseTriplewiseInteraction::~BaseTriplewiseInteraction() = default;
 
 real BaseTriplewiseInteraction::getCutoffRadius() const
 {
-    return rc_;
+    return 2.0_r*rc_;   //due to the property of 3body interaction, increasing cell sizes
 }
 
 ConfigObject BaseTriplewiseInteraction::_saveSnapshot(Saver& saver, const std::string& typeName)

@@ -94,12 +94,12 @@ public:
             if(dr_jk2 < rc2_ && dr_ki2 < rc2_){     //(ij, jk, ki): (n,y,y)
                 return {-h_ikj_i, -h_ikj_j, -h_ikj_k};
             }else{                                  //(ij, jk, ki): (n,y,n),(n,n,y),(n,n,n)
-                const real3 zero = make_real3(0.0_r);        
-                return {zero, zero, zero};          //shouldn't make it to this point
+                const real3 zeros = make_real3(0.0_r);        
+                return {zeros, zeros, zeros};          //shouldn't make it to this point
             }
         }else if(dr_jk2 >= rc2_ && dr_ki2 >= rc2_){ //(ij, jk, ki): (y,n,n)
-            const real3 zero = make_real3(0.0_r);        
-            return {zero, zero, zero};
+            const real3 zeros = make_real3(0.0_r);        
+            return {zeros, zeros, zeros};
         }else{                                      //(ij, jk, ki): (y,y,y),(y,y,n),(y,n,y)
             if(dr_jk2 < rc2_ && dr_ki2 < rc2_){     //(ij, jk, ki): (y,y,y)
                 return {-(h_jik_i + h_ijk_i + h_ikj_i), -(h_jik_j + h_ijk_j + h_ikj_j), -(h_jik_k + h_ijk_k + h_ikj_k)};

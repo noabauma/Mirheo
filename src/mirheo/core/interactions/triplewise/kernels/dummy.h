@@ -32,8 +32,8 @@ public:
         if (drA2 >= rc2_ || drB2 >= rc2_ || drAB2 >= rc2_)
             return {zero, zero, zero};
         */
-        const real3 zero = make_real3(0.0_r);        
-        return {make_real3(epsilon_, 0.0_r, 0.0_r), zero, zero};
+        const real3 zeros = make_real3(0.0_r);        
+        return {make_real3(epsilon_, 0.0_r, 0.0_r), zeros, zeros};
     }
 private:
     real epsilon_;

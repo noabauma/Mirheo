@@ -95,7 +95,15 @@ public:
         if (pv1 != pv2 || pv2 != pv3 || pv3 != pv1)
             die("3-body forces with two or three different ParticleVectors not implemented.");
 
-        _computeHalo(pv1, pv2, pv3, cl1, cl2, cl3, stream);
+        (void)pv1;
+        (void)pv2;
+        (void)pv3;
+        (void)cl1;
+        (void)cl2;
+        (void)cl3;
+        (void)stream;
+        
+        //_computeHalo(pv1, pv2, pv3, cl1, cl2, cl3, stream);
     }
 
     Stage getStage() const override
@@ -191,15 +199,18 @@ private:
         {
             auto view = cl1->getView<ViewType>();
             const int np = view.size;
-            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np);
+            if(np >= 3){
+                debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np);
 
-            const int nth = 128;
+                const int nth = 128;
 
-            auto cinfo = cl1->cellInfo();
-            SAFE_KERNEL_LAUNCH(
-                 computeTriplewiseSelfInteractions,
-                 getNblocks(np, nth), nth, 0, stream,
-                 cinfo, view, kernel_.handler());
+                auto cinfo = cl1->cellInfo();
+                
+                SAFE_KERNEL_LAUNCH(
+                    computeTriplewiseSelfInteractions,
+                    getNblocks(np, nth), nth, 0, stream,
+                    cinfo, view, kernel_.handler());
+            }
         }
         else /*  External interaction */
         {
@@ -218,23 +229,27 @@ private:
             //local-local-halo
             kernel_.setup(pv1->local(), pv2->local(), pv3->halo(), cl1, cl2, cl3, getState());
             auto view = cl1->getView<ViewType>();
-            const int np = view.size;
-            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np);
+            const int np_local = pv1->local()->size();
+            const int np_halo = pv1->halo()->size();
+            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np_local);
 
             const int nth = 128;
 
             auto cinfo = cl1->cellInfo();
-            SAFE_KERNEL_LAUNCH(
-                 computeTriplewiseSelfInteractions,
-                 getNblocks(np, nth), nth, 0, stream,
-                 cinfo, view, kernel_.handler());
-            
-            //local-halo-halo
-            kernel_.setup(pv1->local(), pv2->halo(), pv3->halo(), cl1, cl2, cl3, getState());
-            SAFE_KERNEL_LAUNCH(
-                 computeTriplewiseSelfInteractions,
-                 getNblocks(np, nth), nth, 0, stream,
-                 cinfo, view, kernel_.handler());
+
+            if(np_local > 0 && np_halo > 0){
+                SAFE_KERNEL_LAUNCH(
+                    computeTriplewiseSelfInteractions,      //ATM I use SelfInteractions, because no update for srcView implemented
+                    getNblocks(np_halo, nth), nth, 0, stream,
+                    cinfo, view, kernel_.handler());
+                
+                //local-halo-halo
+                kernel_.setup(pv1->local(), pv2->halo(), pv3->halo(), cl1, cl2, cl3, getState());
+                SAFE_KERNEL_LAUNCH(
+                    computeTriplewiseSelfInteractions,
+                    getNblocks(np_halo, nth), nth, 0, stream,
+                    cinfo, view, kernel_.handler());
+            }
         }
         else /*  External interaction */
         {

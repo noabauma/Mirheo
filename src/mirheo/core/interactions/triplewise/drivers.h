@@ -42,10 +42,10 @@ __global__ void computeTriplewiseSelfInteractions(
     
     typename Handler::ParticleType srcP1, srcP2;
 
-    //auto accumulator = interaction.getZeroedAccumulator();    //SW3 doesn't have an accumulator
-
     const int3 cell0 = cinfo.getCellIdAlongAxes(handler.getPosition(dstP));
-
+    
+    //printf("particle:%i in Cell:[%i,%i,%i]\n", dstId, cell0.x, cell0.y, cell0.z); int cnt = 0;
+    
     const int cellZMin = math::max(cell0.y-1, 0);
     const int cellZMax = math::min(cell0.z+1, cinfo.ncells.z-1);
     const int cellYMin = math::max(cell0.y-1, 0);
@@ -65,15 +65,11 @@ __global__ void computeTriplewiseSelfInteractions(
 
             for (int cellZ2 = cellZ1; cellZ2 <= cellZMax; ++cellZ2)
             {
-                for (int cellY2 = cellY1; cellY2 <= cellYMax; ++cellY2)
+                for (int cellY2 = (cellZ1 == cellZ2)? cellY1 : cellYMin; cellY2 <= cellYMax; ++cellY2)
                 {
-                    if((cellZ1 == cellZ2) && (cellY1 == cellY2))    //if they are in the same cell, do upper-matrix loop
+                    //if(dstId==2){printf("(%i,%i;%i,%i)\n", cellZ1, cellY1, cellZ2, cellY2); ++cnt;}
+                    if((cellZ2 == cellZ1) && (cellY2 == cellY1))    //if src1 & src2 are in the same cell, do upper-matrix loop
                     {
-                        //const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
-                        //const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
-
-                        //const int pstart2 = cinfo.cellStarts[rowStart2];
-                        //const int pend2   = cinfo.cellStarts[rowEnd2];
                         
                         for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
                         {
@@ -82,9 +78,11 @@ __global__ void computeTriplewiseSelfInteractions(
                             for (int srcId2 = srcId1 + 1; srcId2 < pend1; ++srcId2)
                             {
                                 if((dstId == srcId1) || (dstId == srcId2)) continue;
-                                if(dstId == 0){
+                                /*
+                                if(dstId >= 0){
                                     printf("(%i,%i,%i) ", dstId, srcId1, srcId2);
                                 }
+                                */
                                 handler.readCoordinates(srcP2, view, srcId2);
 
                                 bool interacting_20 = handler.withinCutoff(dstP , srcP2);
@@ -92,7 +90,8 @@ __global__ void computeTriplewiseSelfInteractions(
 
                                 if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
                                 {
-                                    //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
+                                    handler.readExtraData(srcP1, view, srcId1);    //SW3 & Dummy doesn't need this
+                                    handler.readExtraData(srcP2, view, srcId2);
 
                                     const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
 
@@ -116,6 +115,7 @@ __global__ void computeTriplewiseSelfInteractions(
                         const int pstart2 = cinfo.cellStarts[rowStart2];
                         const int pend2   = cinfo.cellStarts[rowEnd2];
                         
+                        //if(cellZ1 == 1 && cellY1 == 2 && cellZ2 == 2 && cellY2 == 1){printf("Hello! %i,%i",pstart2,pend2);}
                         for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
                         {
                             handler.readCoordinates(srcP1, view, srcId1);
@@ -123,7 +123,11 @@ __global__ void computeTriplewiseSelfInteractions(
                             for (int srcId2 = pstart2; srcId2 < pend2; ++srcId2)
                             {
                                 if((dstId == srcId1) || (dstId == srcId2)) continue;
-
+                                /*
+                                if(dstId >= 0){
+                                    printf("(%i,%i,%i) ", dstId, srcId1, srcId2);
+                                }
+                                */
                                 handler.readCoordinates(srcP2, view, srcId2);
 
                                 bool interacting_20 = handler.withinCutoff(dstP , srcP2);
@@ -131,8 +135,9 @@ __global__ void computeTriplewiseSelfInteractions(
 
                                 if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
                                 {
-                                    //handler.readExtraData(srcP, srcView, srcId);    //SW3 doesn't need this
-
+                                    handler.readExtraData(srcP1, view, srcId1);    //SW3 & Dummy doesn't need this
+                                    handler.readExtraData(srcP2, view, srcId2);
+                                    
                                     const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
 
                                     frc_ += val[0];
@@ -152,6 +157,7 @@ __global__ void computeTriplewiseSelfInteractions(
         } //cellY1
     } //cellZ1
     atomicAdd(view.forces + dstId, frc_);
+    //if(dstId == 2) printf("\n%i\n",cnt); //debugging
 }
 
 } // namespace mirheo
