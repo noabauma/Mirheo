@@ -32,6 +32,12 @@ public:
     real getCutoffRadius() const override;
 
 protected:
+    /** \brief Get or create the halo cell list corresponding to the given PV.
+        \param [in] pv \c ParticleVector to operate on
+        \param [in] refCL Reference \c CellList with local particles
+     */
+    CellList* _getOrCreateHaloCellList(ParticleVector *pv, const CellList *refCL);
+
     /** \brief Snapshot saving for base triplewise interactions. Stores the cutoff value.
         \param [in,out] saver The \c Saver object. Provides save context and serialization functions.
         \param [in] typeName The name of the type being saved.
@@ -39,7 +45,11 @@ protected:
     ConfigObject _saveSnapshot(Saver& saver, const std::string& typeName);
 
 protected:
-    real rc_; ///< cut-off radius of the interaction
+    /// cut-off radius of the interaction
+    real rc_;
+
+    /// cell lists for halo particles
+    std::map<ParticleVector *, CellList> haloCLs_;
 };
 
 } // namespace mirheo

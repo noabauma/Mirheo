@@ -9,6 +9,7 @@ namespace mirheo
 {
 
 static const std::string fname = "state.mirheo";
+constexpr real MirState::InvalidDt;
 
 ConfigValue TypeLoadSave<UnitConversion>::save(Saver& saver, const UnitConversion& units)
 {

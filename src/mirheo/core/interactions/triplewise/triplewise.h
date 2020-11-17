@@ -20,7 +20,6 @@
 namespace mirheo
 {
 
-template <typename T> class Debug;
 /** \brief Short-range symmetric triplewise interactions
     \tparam TriplewiseKernel The functor that describes the interaction between two particles (interaction kernel).
 
@@ -95,15 +94,15 @@ public:
         if (pv1 != pv2 || pv2 != pv3 || pv3 != pv1)
             die("3-body forces with two or three different ParticleVectors not implemented.");
 
-        (void)pv1;
-        (void)pv2;
-        (void)pv3;
-        (void)cl1;
+        CellList *haloCL = _getOrCreateHaloCellList(pv1, cl1);
+        // In principle, halo cell lists could be shared among all instances of
+        // BaseTriplewiseInteraction to enable reusing among multiple
+        // triplewise interactions. See InteractionManager and Simulation.
+        haloCL->build(stream);
+
         (void)cl2;
         (void)cl3;
-        (void)stream;
-        
-        //_computeHalo(pv1, pv2, pv3, cl1, cl2, cl3, stream);
+        _computeHalo111(pv1, cl1, haloCL, stream);
     }
 
     Stage getStage() const override
@@ -192,7 +191,7 @@ private:
                        CellList* cl1, CellList* cl2, CellList* cl3, cudaStream_t stream)
     {
         using ViewType = typename TriplewiseKernel::ViewType;
-        kernel_.setup(pv1->local(), pv2->local(), pv3->local(), cl1, cl2, cl3, getState());
+        kernel_.setup(cl1, cl2, cl3, getState());
 
         /*  Self interaction */
         if (pv1 == pv2 && pv2 == pv3 && pv3 == pv1)
@@ -210,6 +209,10 @@ private:
                     computeTriplewiseSelfInteractions,
                     getNblocks(np, nth), nth, 0, stream,
                     cinfo, view, kernel_.handler());
+                // SAFE_KERNEL_LAUNCH(
+                //         computeTriplewiseSelfInteractions,  // TODO: Needs dst force.
+                //         getNblocks(np, nth), nth, 0, stream,
+                //         cinfo, view, view, kernel_.handler());
             }
         }
         else /*  External interaction */
@@ -218,43 +221,44 @@ private:
         }
     }
 
-    /** \brief Compute halo forces */
-    void _computeHalo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3, CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream)
+    /** \brief Compute halo forces for interactions within a single ParticleVector */
+    void _computeHalo111(ParticleVector *pv, CellList *clLocal, CellList *clHalo, cudaStream_t stream)
     {
         using ViewType = typename TriplewiseKernel::ViewType;
 
-        /*  Self interaction */
-        if (pv1 == pv2 && pv2 == pv3 && pv3 == pv1)
-        {
-            //local-local-halo
-            kernel_.setup(pv1->local(), pv2->local(), pv3->halo(), cl1, cl2, cl3, getState());
-            auto view = cl1->getView<ViewType>();
-            const int np_local = pv1->local()->size();
-            const int np_halo = pv1->halo()->size();
-            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np_local);
+        // Ask cell lists for the views, not the particle vector! Cell
+        // lists store copies of the data, reordered according to cells.
+        auto viewLocal = clLocal->getView<ViewType>();
+        auto viewHalo = clHalo->getView<ViewType>();
+        assert(viewLocal.size == pv->local()->size());
+        assert(viewHalo.size == pv->halo()->size());
+        debug("Computing internal forces for %s (%d local and %d halo particles)",
+              pv->getCName(), viewLocal.size, viewHalo.size);
 
-            const int nth = 128;
+        if (viewLocal.size == 0 || viewHalo.size == 0)
+            return;
 
-            auto cinfo = cl1->cellInfo();
+        auto cinfoLocal = clLocal->cellInfo();
+        auto cinfoHalo = clHalo->cellInfo();
 
-            if(np_local > 0 && np_halo > 0){
-                SAFE_KERNEL_LAUNCH(
-                    computeTriplewiseSelfInteractions,      //ATM I use SelfInteractions, because no update for srcView implemented
-                    getNblocks(np_halo, nth), nth, 0, stream,
-                    cinfo, view, kernel_.handler());
-                
-                //local-halo-halo
-                kernel_.setup(pv1->local(), pv2->halo(), pv3->halo(), cl1, cl2, cl3, getState());
-                SAFE_KERNEL_LAUNCH(
-                    computeTriplewiseSelfInteractions,
-                    getNblocks(np_halo, nth), nth, 0, stream,
-                    cinfo, view, kernel_.handler());
-            }
-        }
-        else /*  External interaction */
-        {
-            die("3-body interactions with two or three different PVs not implemented.");
-        }
+        (void)cinfoLocal;
+        (void)cinfoHalo;
+        (void)stream;
+
+        // halo-local-local
+        kernel_.setup(clHalo, clLocal, clLocal, getState());
+        // const int nth = 128;
+        // SAFE_KERNEL_LAUNCH(
+        //         computeTriplewiseSelfInteractions,  // TODO: Needs src1 forces.
+        //         getNblocks(viewHalo.size, nth), nth, 0, stream,
+        //         clLocal, viewHalo, viewLocal, kernel_.handler());
+
+        // local-halo-halo
+        kernel_.setup(clLocal, clHalo, clHalo, getState());
+        // SAFE_KERNEL_LAUNCH(
+        //         computeTriplewiseSelfInteractions,  // TODO: Needs dst forces.
+        //         getNblocks(viewLocal.size, nth), nth, 0, stream,
+        //         cinfoHalo, viewLocal, viewHalo, kernel_.handler());
     }
 
 private:

@@ -11,19 +11,48 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
+def brute_force(positions, rc, epsilon):
+    """O(N^3) brute force computation of the dummy force."""
+
+    N = len(positions)
+
+    # Preprocess a 0-1 matrix within_cutoff[i, j] denoting whether or not
+    # particles i and j are within the cutoff.
+    matrix = np.tile(positions, (N, 1, 1))
+    diff = matrix - matrix.transpose((1, 0, 2))
+    within_cutoff = ((diff * diff).sum(axis=2) <= rc * rc).astype(np.int)
+
+    result = np.zeros((N, 3))
+    for i in range(N):
+        for j in range(N):
+            if i == j:
+                continue
+            for k in range(j + 1, N):
+                if i == k:
+                    continue
+                if within_cutoff[i, j] + within_cutoff[j, k] + within_cutoff[k, i] >= 2:
+                    result[i, 0] += epsilon
+    return result
+
 
 def main():
+    domain = (10.0, 10.0, 10.0)
+    rc = 1.0
+    epsilon = 10.0
+
     particles = np.loadtxt("particles.csv", delimiter=',')
     velo = np.zeros((particles.shape[0],3))
+    # Random particle positions:
+    # particles = 2 * rc + np.random.rand(*particles.shape) * (np.array(domain) - 4 * rc)
+    # particles = np.random.rand(*particles.shape) * np.array(domain)
 
-    domain = (10.0, 10.0, 10.0)
     u = mir.Mirheo((1, 1, 1), domain, debug_level=3, log_filename='log', no_splash=True)
 
     pv = mir.ParticleVectors.ParticleVector('pv', mass=1.0)
     ic = mir.InitialConditions.FromArray(pos=particles, vel=velo)
     u.registerParticleVector(pv, ic)
 
-    dummy = mir.Interactions.Triplewise('interaction', rc=1.0, kind='Dummy', epsilon=10.0)
+    dummy = mir.Interactions.Triplewise('interaction', rc=rc, kind='Dummy', epsilon=epsilon)
     u.registerInteraction(dummy)
     u.setInteraction(dummy, pv, pv, pv)
 
@@ -38,10 +67,17 @@ def main():
 
     u.run(2, dt=0.0001)
 
-    f = h5py.File('h5/dummy-00001.h5', 'r')
-    forces = f['forces']
     if rank == 0:
-        print("forces:\n", forces[()])
+        f = h5py.File('h5/dummy-00001.h5', 'r')
+        forces = f['forces']
+        brute = brute_force(particles, rc, epsilon)
+        # FIXME: Mirheo will change the order of particles, == comparison won't
+        #        work. Since Dummy affects only fx, maybe store py and pz in fy
+        #        and fz to uniquely identify a particle? Or better say that F =
+        #        (px, py, <num interactions>), to make sorting simpler?
+        # assert forces == brute
+        print("mirheo:\n", forces[()])
+        print("brute force:\n", brute)
 
 
 main()
