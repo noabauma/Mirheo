@@ -11,15 +11,19 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
-def brute_force(positions, rc, epsilon):
+def brute_force(positions, domain, rc, epsilon):
     """O(N^3) brute force computation of the dummy force."""
+    domain = np.array(domain)
 
     N = len(positions)
+    assert N != 3, "Just in case, don't use N == 3, numpy might do the wrong thing"
 
     # Preprocess a 0-1 matrix within_cutoff[i, j] denoting whether or not
     # particles i and j are within the cutoff.
     matrix = np.tile(positions, (N, 1, 1))
     diff = matrix - matrix.transpose((1, 0, 2))
+    diff = abs(diff)
+    diff = np.minimum(diff, domain - diff)  # Periodic boundary condition.
     within_cutoff = ((diff * diff).sum(axis=2) <= rc * rc).astype(np.int)
 
     result = np.zeros((N, 3))
@@ -40,7 +44,13 @@ def main():
     rc = 1.0
     epsilon = 10.0
 
-    particles = np.loadtxt("particles.csv", delimiter=',')
+    # particles = np.loadtxt("particles.csv", delimiter=',')
+    particles = np.array([
+        [0.1, 5.0, 5.01],
+        [0.2, 5.0, 5.02],
+        [5.0, 5.0, 5.03],
+        [9.9, 5.0, 5.04],
+    ])
     velo = np.zeros((particles.shape[0],3))
     # Random particle positions:
     # particles = 2 * rc + np.random.rand(*particles.shape) * (np.array(domain) - 4 * rc)
@@ -70,7 +80,7 @@ def main():
     if rank == 0:
         f = h5py.File('h5/dummy-00001.h5', 'r')
         forces = f['forces']
-        brute = brute_force(particles, rc, epsilon)
+        brute = brute_force(particles, domain, rc, epsilon)
         # FIXME: Mirheo will change the order of particles, == comparison won't
         #        work. Since Dummy affects only fx, maybe store py and pz in fy
         #        and fz to uniquely identify a particle? Or better say that F =

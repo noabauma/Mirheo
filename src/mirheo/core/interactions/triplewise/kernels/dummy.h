@@ -32,8 +32,13 @@ public:
         if (drA2 >= rc2_ || drB2 >= rc2_ || drAB2 >= rc2_)
             return {zero, zero, zero};
         */
-        const real3 zeros = make_real3(0.0_r);        
-        return {make_real3(epsilon_, 0.0_r, 0.0_r), zeros, zeros};
+        // First number is to count the interactions, last to identify the
+        // particle (note that p*.r.x is in local coordinate system).
+        return {
+            make_real3(epsilon_, 0.0_r, p.r.z),
+            make_real3(epsilon_, 0.0_r, pA.r.z),
+            make_real3(epsilon_, 0.0_r, pB.r.z),
+        };
     }
 private:
     real epsilon_;
