@@ -17,6 +17,12 @@
 namespace mirheo
 {
 
+///Template parameter for wether we need to add force to dst(Self) or src(Other)
+enum class InteractionWith
+{
+    Self, Other
+};
+
 /** \brief Compute triplewise interactions within a single ParticleVector.
     \tparam Interaction The triplewise interaction kernel
 
@@ -27,18 +33,18 @@ namespace mirheo
     Mapping is one thread per particle.
     TODO: Explain the algorithm.
   */
-template<typename Handler>
+template<InteractionWith InteractWith, typename Handler>
 __launch_bounds__(128, 16)
 __global__ void computeTriplewiseSelfInteractions(
-        CellListInfo cinfo, typename Handler::ViewType view, Handler handler)
+        CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler)
 {
 
     const int dstId = blockIdx.x*blockDim.x + threadIdx.x;
-    if (dstId >= view.size) return;
+    if (dstId >= dstView.size) return;
 
-    const auto dstP = handler.read(view, dstId);
+    const auto dstP = handler.read(dstView, dstId);
 
-    real3 frc_ = make_real3(0.0_r);
+    real3 frc_ = make_real3(0.0_r); //only if dst gets force
     
     typename Handler::ParticleType srcP1, srcP2;
 
@@ -65,87 +71,50 @@ __global__ void computeTriplewiseSelfInteractions(
             {
                 for (int cellY2 = (cellZ1 == cellZ2)? cellY1 : cellYMin; cellY2 <= cellYMax; ++cellY2)
                 {
+                    const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
+                    const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
+
+                    const int pstart2 = cinfo.cellStarts[rowStart2];
+                    const int pend2   = cinfo.cellStarts[rowEnd2];
                     
-                    if((cellZ2 == cellZ1) && (cellY2 == cellY1))    //if src1 & src2 are in the same cell, do upper-matrix loop
+                    for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
                     {
-                        
-                        for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
+                        handler.readCoordinates(srcP1, srcView, srcId1);
+                        bool interacting_01 = handler.withinCutoff(dstP, srcP1);
+                        for (int srcId2 = (cellZ2 == cellZ1) && (cellY2 == cellY1)? srcId1 + 1 : pstart2; srcId2 < pend2; ++srcId2)
                         {
-                            handler.readCoordinates(srcP1, view, srcId1);
-                            bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                            for (int srcId2 = srcId1 + 1; srcId2 < pend1; ++srcId2)
+                            if((dstId == srcId1) || (dstId == srcId2)) continue;
+
+                            handler.readCoordinates(srcP2, srcView, srcId2);
+
+                            bool interacting_20 = handler.withinCutoff(dstP , srcP2);
+                            bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
+
+                            if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
                             {
-                                if((dstId == srcId1) || (dstId == srcId2)) continue;
+                                handler.readExtraData(srcP1, srcView, srcId1);    //SW3 & Dummy doesn't need this
+                                handler.readExtraData(srcP2, srcView, srcId2);
+                                
+                                const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
 
-                                handler.readCoordinates(srcP2, view, srcId2);
-
-                                bool interacting_20 = handler.withinCutoff(dstP , srcP2);
-                                bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
-
-                                if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
+                                if(InteractWith == InteractionWith::Self)
                                 {
-                                    handler.readExtraData(srcP1, view, srcId1);    //SW3 & Dummy doesn't need this
-                                    handler.readExtraData(srcP2, view, srcId2);
-
-                                    const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
-
                                     frc_ += val[0];
-                                    /*
-                                    if (NeedDstOutput == InteractionOutMode::NeedOutput)
-                                        accumulator.add(val[0]);
-
-                                    if (NeedSrcOutput == InteractionOutMode::NeedOutput)
-                                        accumulator.atomicAddToSrc(val, srcView, srcId);
-                                    */
+                                }
+                                else
+                                {
+                                    atomicAdd(srcView.forces + srcId1, val[1]);
+                                    atomicAdd(srcView.forces + srcId2, val[2]);
                                 }
                             }
                         }
                     }
-                    else    //O(N^2) go throw all 
-                    {
-                        const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
-                        const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
-
-                        const int pstart2 = cinfo.cellStarts[rowStart2];
-                        const int pend2   = cinfo.cellStarts[rowEnd2];
-                        
-                        for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
-                        {
-                            handler.readCoordinates(srcP1, view, srcId1);
-                            bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                            for (int srcId2 = pstart2; srcId2 < pend2; ++srcId2)
-                            {
-                                if((dstId == srcId1) || (dstId == srcId2)) continue;
-
-                                handler.readCoordinates(srcP2, view, srcId2);
-
-                                bool interacting_20 = handler.withinCutoff(dstP , srcP2);
-                                bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
-
-                                if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
-                                {
-                                    handler.readExtraData(srcP1, view, srcId1);    //SW3 & Dummy doesn't need this
-                                    handler.readExtraData(srcP2, view, srcId2);
-                                    
-                                    const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
-
-                                    frc_ += val[0];
-                                    /*
-                                    if (NeedDstOutput == InteractionOutMode::NeedOutput)
-                                        accumulator.add(val[0]);
-
-                                    if (NeedSrcOutput == InteractionOutMode::NeedOutput)
-                                        accumulator.atomicAddToSrc(val, srcView, srcId);
-                                    */
-                                }
-                            }
-                        }
-                    } //else
                 } //cellY2
             } //cellZ2
         } //cellY1
     } //cellZ1
-    atomicAdd(view.forces + dstId, frc_);
+    if(InteractWith == InteractionWith::Self)
+        atomicAdd(dstView.forces + dstId, frc_); 
 }
 
 } // namespace mirheo

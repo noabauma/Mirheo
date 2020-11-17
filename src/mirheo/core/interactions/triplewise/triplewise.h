@@ -205,15 +205,15 @@ private:
 
                 auto cinfo = cl1->cellInfo();
                 
+                //SAFE_KERNEL_LAUNCH(
+                //    computeTriplewiseSelfInteractions,
+                //    getNblocks(np, nth), nth, 0, stream,
+                //    cinfo, view, kernel_.handler()); 
                 SAFE_KERNEL_LAUNCH(
-                    computeTriplewiseSelfInteractions,
-                    getNblocks(np, nth), nth, 0, stream,
-                    cinfo, view, kernel_.handler());
-                // SAFE_KERNEL_LAUNCH(
-                //         computeTriplewiseSelfInteractions,  // TODO: Needs dst force.
-                //         getNblocks(np, nth), nth, 0, stream,
-                //         cinfo, view, view, kernel_.handler());
-            }
+                        computeTriplewiseSelfInteractions<InteractionWith::Self>,  // TODO: Needs dst force.
+                        getNblocks(np, nth), nth, 0, stream,
+                        cinfo, view, view, kernel_.handler());
+            }   
         }
         else /*  External interaction */
         {
@@ -235,30 +235,28 @@ private:
         debug("Computing internal forces for %s (%d local and %d halo particles)",
               pv->getCName(), viewLocal.size, viewHalo.size);
 
-        if (viewLocal.size == 0 || viewHalo.size == 0)
+        if (viewLocal.size == 0 || viewHalo.size == 0 || viewLocal.size + viewHalo.size < 3)
             return;
 
         auto cinfoLocal = clLocal->cellInfo();
         auto cinfoHalo = clHalo->cellInfo();
 
-        (void)cinfoLocal;
-        (void)cinfoHalo;
-        (void)stream;
+
+        const int nth = 128;
 
         // halo-local-local
         kernel_.setup(clHalo, clLocal, clLocal, getState());
-        // const int nth = 128;
-        // SAFE_KERNEL_LAUNCH(
-        //         computeTriplewiseSelfInteractions,  // TODO: Needs src1 forces.
-        //         getNblocks(viewHalo.size, nth), nth, 0, stream,
-        //         clLocal, viewHalo, viewLocal, kernel_.handler());
+        SAFE_KERNEL_LAUNCH(
+                computeTriplewiseSelfInteractions<InteractionWith::Other>,  // TODO: Needs src1 forces.
+                getNblocks(viewHalo.size, nth), nth, 0, stream,
+                cinfoLocal, viewHalo, viewLocal, kernel_.handler());
 
         // local-halo-halo
         kernel_.setup(clLocal, clHalo, clHalo, getState());
-        // SAFE_KERNEL_LAUNCH(
-        //         computeTriplewiseSelfInteractions,  // TODO: Needs dst forces.
-        //         getNblocks(viewLocal.size, nth), nth, 0, stream,
-        //         cinfoHalo, viewLocal, viewHalo, kernel_.handler());
+        SAFE_KERNEL_LAUNCH(
+                computeTriplewiseSelfInteractions<InteractionWith::Self>,  // TODO: Needs dst forces.
+                getNblocks(viewLocal.size, nth), nth, 0, stream,
+                 cinfoHalo, viewLocal, viewHalo, kernel_.handler());
     }
 
 private:
