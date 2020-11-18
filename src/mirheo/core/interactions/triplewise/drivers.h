@@ -50,16 +50,13 @@ __global__ void computeTriplewiseSelfInteractions(
 
     const auto dstP = handler.read(dstView, dstId);
 
-
     real3 frc_ = make_real3(0.0_r);
     
     typename Handler::ParticleType srcP1, srcP2;
 
     const int3 cell0 = cinfo.getCellIdAlongAxes(handler.getPosition(dstP));
-
-    if(InteractWith == InteractionWith::Other) printf("dstId: %i, dstP:(%f,%f,%f) & cellId:(%i,%i,%i)\n", dstId, dstP.r.x, dstP.r.y, dstP.r.z, cell0.x, cell0.y, cell0.z);
     
-    const int cellZMin = math::max(cell0.y-1, 0);
+    const int cellZMin = math::max(cell0.z-1, 0);
     const int cellZMax = math::min(cell0.z+1, cinfo.ncells.z-1);
     const int cellYMin = math::max(cell0.y-1, 0);
     const int cellYMax = math::min(cell0.y+1, cinfo.ncells.y-1);
@@ -93,9 +90,6 @@ __global__ void computeTriplewiseSelfInteractions(
                         for (int srcId2 = (cellZ2 == cellZ1) && (cellY2 == cellY1)? srcId1 + 1 : pstart2; srcId2 < pend2; ++srcId2)
                         {
                             if(InteractType == InteractionType::Local && (dstId == srcId1 || dstId == srcId2)) continue;
-
-                            printf("dstId: %i, srcP1: (%f,%f,%f)\n", dstId, srcP1.r.x, srcP1.r.y, srcP1.r.z);
-                            printf("dstId: %i, srcP1: (%f,%f,%f)\n", dstId, srcP2.r.x, srcP2.r.y, srcP2.r.z);
 
                             handler.readCoordinates(srcP2, srcView, srcId2);
 

@@ -205,13 +205,8 @@ private:
 
                 auto cinfo = cl1->cellInfo();
                 
-                //SAFE_KERNEL_LAUNCH(
-                //    computeTriplewiseSelfInteractions,
-                //    getNblocks(np, nth), nth, 0, stream,
-                //    cinfo, view, kernel_.handler());
-                printf("kernel launch: local-local-local\n"); 
                 SAFE_KERNEL_LAUNCH(
-                        (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Local>),  // TODO: Needs dst force.
+                        (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Local>),
                         getNblocks(np, nth), nth, 0, stream,
                         cinfo, view, view, kernel_.handler());
             }   
@@ -246,18 +241,16 @@ private:
         const int nth = 128;
 
         // halo-local-local
-        printf("kernel launch: halo-local-local\n");
         kernel_.setup(clHalo, clLocal, clLocal, getState());
         SAFE_KERNEL_LAUNCH(
-                (computeTriplewiseSelfInteractions<InteractionWith::Other, InteractionType::Halo>),  // TODO: Needs src1 forces.
+                (computeTriplewiseSelfInteractions<InteractionWith::Other, InteractionType::Halo>),
                 getNblocks(viewHalo.size, nth), nth, 0, stream,
                 cinfoLocal, viewHalo, viewLocal, kernel_.handler());
 
         // local-halo-halo
-        printf("kernel launch: local-halo-halo\n");
         kernel_.setup(clLocal, clHalo, clHalo, getState());
         SAFE_KERNEL_LAUNCH(
-                (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Halo>),  // TODO: Needs dst forces.
+                (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Halo>),
                 getNblocks(viewLocal.size, nth), nth, 0, stream,
                  cinfoHalo, viewLocal, viewHalo, kernel_.handler());
     }
