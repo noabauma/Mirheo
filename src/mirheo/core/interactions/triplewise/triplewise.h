@@ -94,15 +94,21 @@ public:
         if (pv1 != pv2 || pv2 != pv3 || pv3 != pv1)
             die("3-body forces with two or three different ParticleVectors not implemented.");
 
-        CellList *haloCL = _getOrCreateHaloCellList(pv1, cl1);
-        // In principle, halo cell lists could be shared among all instances of
-        // BaseTriplewiseInteraction to enable reusing among multiple
-        // triplewise interactions. See InteractionManager and Simulation.
-        haloCL->build(stream);
+        CellList *clHalo = &_getOrCreateCellLists(pv1, cl1)->halo;
+        clHalo->build(stream);
 
         (void)cl2;
         (void)cl3;
-        _computeHalo111(pv1, cl1, haloCL, stream);
+        // We use the original coarse cell lists here because
+        //   a) `computeLocal` and `computeHalo` may run in parallel, we would
+        //      need to rebuild `refinedLocal` cell list in the "Plugins:
+        //      before forces" task or earlier.
+        //   b) force accumulation from `refinedLocal` would have to be done
+        //      after both `computeLocal` and `computeHalo` have completed,
+        //      which again would require modifying the task schedule
+        // Hence, we choose to use original `cl1`, at the cost of slowing down
+        // the HLL step by 64x.
+        _computeHalo111(pv1, cl1, clHalo, stream);
     }
 
     Stage getStage() const override
@@ -196,20 +202,30 @@ private:
         /*  Self interaction */
         if (pv1 == pv2 && pv2 == pv3 && pv3 == pv1)
         {
-            auto view = cl1->getView<ViewType>();
-            const int np = view.size;
-            if(np >= 3){
-                debug("Computing internal forces for %s (%d particles)", pv1->getCName(), np);
+            CellList *clRefined = &_getOrCreateCellLists(pv1, cl1)->refinedLocal;
+            clRefined->build(stream);
+            const auto view = cl1->getView<ViewType>();
+            if (view.size < 3)
+                return;
 
-                const int nth = 128;
+            debug("Computing internal forces for %s (%d particles)", pv1->getCName(), view.size);
 
-                auto cinfo = cl1->cellInfo();
-                
-                SAFE_KERNEL_LAUNCH(
-                        computeTriplewiseSelfInteractions<InteractionType::LLL>,
-                        getNblocks(np, nth), nth, 0, stream,
-                        cinfo, view, view, kernel_.handler());
-            }   
+            // The refined cell list is not a part of InteractionManager, so we
+            // manually clear and accumulate the forces.
+            auto interactionChannels = getOutputChannels();
+            std::vector<std::string> channelNames(interactionChannels.size());
+            for (size_t i = 0; i < interactionChannels.size(); ++i)
+                channelNames[i] = std::move(interactionChannels[i].name);
+            clRefined->clearChannels(channelNames, stream);
+
+            const int nth = 128;
+            SAFE_KERNEL_LAUNCH(
+                    computeTriplewiseSelfInteractions<InteractionType::LLL>,
+                    getNblocks(view.size, nth), nth, 0, stream,
+                    clRefined->cellInfo(), view, view, kernel_.handler());
+
+            // Accumulate forces back to the particle vector.
+            clRefined->accumulateChannels(channelNames, stream);
         }
         else /*  External interaction */
         {

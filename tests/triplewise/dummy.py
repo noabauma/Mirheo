@@ -44,13 +44,17 @@ def main():
     epsilon = 10.0
 
     particles = np.loadtxt("particles.csv", delimiter=',')
-    # particles = np.array([
+    particles = np.array([
     #     [0.01, 0.01, 0.01],
     #     [9.99, 0.01, 0.01],
     #     [0.01, 9.99, 0.01],
     #     [0.01, 0.01, 9.99],
     #     [0.02, 9.99, 0.01]
-    # ])
+	[0.48, 0.48, 1.36],
+	[2.28, 1.04, 1.32],
+	[2.56, 1.8 , 1.  ],
+	[2.12, 1.64, 0.44],
+    ])
     # particles = np.random.rand(int(1.5 * domain[0] * domain[1] * domain[2]), 3) * domain
     # np.savetxt('particles.csv', particles, fmt='%f', delimiter=',')
 
@@ -82,9 +86,9 @@ def main():
         brute = brute_force(particles, domain, rc, epsilon)
         # Note: Mirheo changes the order of particles, so we have to sort the
         #       result somehow before comparing.
-        # print("mirheo positions:\n", f['position'][()])
-        # print("mirheo:\n", mirheo)
-        # print("brute force:\n", brute)
+        print("mirheo positions:\n", f['position'][()])
+        print("mirheo:\n", mirheo)
+        print("brute force:\n", brute)
         np.testing.assert_array_equal(np.sort(mirheo[:, 0]), np.sort(brute[:, 0]))
         print("OK")
 

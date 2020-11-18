@@ -20,21 +20,28 @@ BaseTriplewiseInteraction::~BaseTriplewiseInteraction() = default;
 
 real BaseTriplewiseInteraction::getCutoffRadius() const
 {
-    return 2.0_r*rc_;   //due to the property of 3body interaction, increasing cell sizes
+    // local-halo-halo particles have a reach of 2*rc, see base_triplewise.h
+    return 2 * rc_;
 }
 
-CellList* BaseTriplewiseInteraction::_getOrCreateHaloCellList(
-        ParticleVector *pv, const CellList *refCL) {
-    auto it = haloCLs_.find(pv);
-    if (it != haloCLs_.end())
+BaseTriplewiseInteraction::CellListPair::CellListPair(
+        ParticleVector *pv, real rc, const CellList *ref) :
+    refinedLocal(pv, rc, ref->localDomainSize, ParticleVectorLocality::Local),
+    halo(pv, rc, ref->localDomainSize + make_real3(4 * rc),  // 2*rc on each side
+         ParticleVectorLocality::Halo)
+{}
+
+BaseTriplewiseInteraction::CellListPair *BaseTriplewiseInteraction::_getOrCreateCellLists(
+        ParticleVector *pv, const CellList *refCL)
+{
+    const auto it = cellLists_.find(pv);
+    if (it != cellLists_.end())
         return &it->second;
-    // std::map<ParticleVector *, CellList>
-    auto pair = haloCLs_.emplace(
+    const auto newIt = cellLists_.emplace(
             std::piecewise_construct,
-            std::make_tuple(pv),
-            std::make_tuple(pv, getCutoffRadius(), refCL->localDomainSize,
-                            ParticleVectorLocality::Halo));
-    return &pair.first->second;
+            std::make_tuple(pv),                    // ParticleVector *
+            std::make_tuple(pv, rc_, refCL)).first; // CellListPair
+    return &newIt->second;
 }
 
 ConfigObject BaseTriplewiseInteraction::_saveSnapshot(Saver& saver, const std::string& typeName)

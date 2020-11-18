@@ -123,18 +123,9 @@ CellListInfo::CellListInfo(real3 h_, real3 localDomainSize_) :
 // Basic cell-lists
 //=================================================================================
 
-/// Compute effective local domain size. Halo cell lists require a padding of 1 cell.
-static real3 effectiveLocalDomainSize(real3 localDomainSize, real rc,
-                                      ParticleVectorLocality locality) {
-    if (locality == ParticleVectorLocality::Local)
-        return localDomainSize;
-    else // halo
-        return localDomainSize + make_real3(2 * rc, 2 * rc, 2 * rc);
-}
-
 CellList::CellList(ParticleVector *pv, real rc_, real3 localDomainSize_,
                    ParticleVectorLocality locality) :
-    CellListInfo(rc_, effectiveLocalDomainSize(localDomainSize_, rc_, locality)),
+    CellListInfo(rc_, localDomainSize_),
     particlesDataContainer_(std::make_unique<LocalParticleVector>(nullptr)),
     pv_(pv),
     srcLPV_(locality == ParticleVectorLocality::Local ? pv->local() : pv->halo())
@@ -396,9 +387,8 @@ std::string CellList::_makeName() const
 // Primary cell-lists
 //=================================================================================
 
-PrimaryCellList::PrimaryCellList(ParticleVector *pv, real rc_,
-                                 real3 localDomainSize_, ParticleVectorLocality locality) :
-        CellList(pv, rc_, localDomainSize_, locality)
+PrimaryCellList::PrimaryCellList(ParticleVector *pv, real rc_, real3 localDomainSize_) :
+        CellList(pv, rc_, localDomainSize_)
 {
     localPV_ = srcLPV_;
 

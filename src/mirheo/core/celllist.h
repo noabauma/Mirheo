@@ -159,6 +159,10 @@ class CellList : public CellListInfo
 {
 public:
     /** Construct a CellList object
+
+        If padding of K cells is needed (e.g. for halo cells), extend the
+        localDomainSize by 2*K*rc.
+
         \param [in] pv The ParticleVector to attach.
         \param [in] rc The maximum cut-off radius that can be used with that cell list.
         \param [in] localDomainSize The size of the local subdomain
@@ -286,10 +290,8 @@ public:
         \param [in] pv The ParticleVector to attach.
         \param [in] rc The maximum cut-off radius that can be used with that cell list.
         \param [in] localDomainSize The size of the local subdomain
-        \param [in] locality Locality of particles to operate on.
      */
-    PrimaryCellList(ParticleVector *pv, real rc, real3 localDomainSize,
-                    ParticleVectorLocality locality = ParticleVectorLocality::Local);
+    PrimaryCellList(ParticleVector *pv, real rc, real3 localDomainSize);
 
     ~PrimaryCellList();
 

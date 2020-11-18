@@ -104,10 +104,19 @@ __global__ void computeTriplewiseSelfInteractions(
                                          || (interacting12 && interacting20)
                                          || (interacting20 && interacting01);
                             }
+
+                            if (InteractType == InteractionType::LLL) {
+                                printf("LLL  dst=%d  src1=%d  src2=%d  condition=%d  01=%d 02=%d 12=%d   (%g %g %g)  (%g %g %g)  (%g %g %g)\n",
+                                       dstId, srcId1, srcId2, (int)condition,
+                                       (int)interacting01, (int)interacting20, (int)interacting12,
+                                       dstP.r.x, dstP.r.y, dstP.r.z,
+                                       srcP1.r.x, srcP1.r.y, srcP1.r.z,
+                                       srcP2.r.x, srcP2.r.y, srcP2.r.z);
+                            }
                             if (condition) {
                                 handler.readExtraData(srcP1, srcView, srcId1);
                                 handler.readExtraData(srcP2, srcView, srcId2);
-                                
+
                                 const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
                                 if (InteractType != InteractionType::HLL)
                                     frc_ += val[0];
@@ -125,7 +134,7 @@ __global__ void computeTriplewiseSelfInteractions(
         } //cellY1
     } //cellZ1
     if (InteractType != InteractionType::HLL)
-        atomicAdd(dstView.forces + dstId, frc_); 
+        atomicAdd(dstView.forces + dstId, frc_);
 }
 
 } // namespace mirheo
