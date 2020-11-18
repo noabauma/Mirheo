@@ -13,10 +13,7 @@ rank = comm.Get_rank()
 
 def brute_force(positions, domain, rc, epsilon):
     """O(N^3) brute force computation of the dummy force."""
-    domain = np.array(domain)
-
     N = len(positions)
-    #assert N != 3, "Just in case, don't use N == 3, numpy might do the wrong thing"
 
     # Preprocess a 0-1 matrix within_cutoff[i, j] denoting whether or not
     # particles i and j are within the cutoff.
@@ -40,27 +37,27 @@ def brute_force(positions, domain, rc, epsilon):
 
 
 def main():
-    domain = (10.0, 10.0, 10.0)
+    # Use a small domain to have a relatively large density with few particles.
+    domain = (7.0, 7.0, 7.0)
     rc = 1.0
     epsilon = 10.0
 
-    # particles = np.loadtxt("particles.csv", delimiter=',')
-    particles = np.array([
-        [0.01, 0.01, 0.01],
-        [9.99, 0.01, 0.01],
-        [0.01, 9.99, 0.01],
-        [0.01, 0.01, 9.99],
-        [0.02, 9.99, 0.01]
-    ])
-    velo = np.zeros((particles.shape[0],3))
-    # Random particle positions:
-    # particles = 2 * rc + np.random.rand(*particles.shape) * (np.array(domain) - 4 * rc)
-    # particles = np.random.rand(*particles.shape) * np.array(domain)
+    particles = np.loadtxt("particles.csv", delimiter=',')
+    # particles = np.array([
+    #     [0.01, 0.01, 0.01],
+    #     [9.99, 0.01, 0.01],
+    #     [0.01, 9.99, 0.01],
+    #     [0.01, 0.01, 9.99],
+    #     [0.02, 9.99, 0.01]
+    # ])
+    # particles = np.random.rand(120, 3) * domain
+    # np.savetxt('particles.csv', particles, fmt='%f', delimiter=',')
 
+    vel = np.zeros(particles.shape)
     u = mir.Mirheo((1, 1, 1), domain, debug_level=3, log_filename='log', no_splash=True)
 
     pv = mir.ParticleVectors.ParticleVector('pv', mass=1.0)
-    ic = mir.InitialConditions.FromArray(pos=particles, vel=velo)
+    ic = mir.InitialConditions.FromArray(pos=particles, vel=vel)
     u.registerParticleVector(pv, ic)
 
     dummy = mir.Interactions.Triplewise('interaction', rc=rc, kind='Dummy', epsilon=epsilon)
@@ -80,19 +77,19 @@ def main():
 
     if rank == 0:
         f = h5py.File('h5/dummy-00001.h5', 'r')
-        forces = f['forces']
+        mirheo = f['forces'][()]
         brute = brute_force(particles, domain, rc, epsilon)
-        # FIXME: Mirheo will change the order of particles, == comparison won't
-        #        work. Since Dummy affects only fx, maybe store py and pz in fy
-        #        and fz to uniquely identify a particle? Or better say that F =
-        #        (px, py, <num interactions>), to make sorting simpler?
-        # assert forces == brute
-        print("mirheo:\n", forces[()])
-        print("brute force:\n", brute)
+        # Note: Mirheo changes the order of particles, so we have to sort the
+        #       result somehow before comparing.
+        # print("mirheo positions:\n", f['position'][()])
+        # print("mirheo:\n", mirheo)
+        # print("brute force:\n", brute)
+        np.testing.assert_array_equal(np.sort(mirheo[:, 0]), np.sort(brute[:, 0]))
+        print("OK")
 
 
 main()
 
-# nTEST: triplewise.dummy
+# TEST: triplewise.dummy
 # cd triplewise
 # mir.run --runargs "-n 2" ./dummy.py > dummy.out.txt

@@ -1,5 +1,1 @@
-Hello from computeTriplewiseSelfInteraction view.size=9600
-Hello from computeTriplewiseSelfInteraction view.size=9600
-Hello from computeTriplewiseSelfInteraction view.size=9600
-Hello from computeTriplewiseSelfInteraction view.size=9600
-Hello from computeTriplewiseSelfInteraction view.size=9600
+OK

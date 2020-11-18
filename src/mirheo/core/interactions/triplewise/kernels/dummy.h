@@ -35,9 +35,9 @@ public:
         // First number is to count the interactions, last to identify the
         // particle (note that p*.r.x is in local coordinate system).
         return {
-            make_real3(epsilon_, 0.0_r, p.r.z),
-            make_real3(epsilon_, 0.0_r, pA.r.z),
-            make_real3(epsilon_, 0.0_r, pB.r.z),
+            make_real3(epsilon_, 0.0_r, 0.0_r),
+            make_real3(epsilon_, 0.0_r, 0.0_r),
+            make_real3(epsilon_, 0.0_r, 0.0_r),
         };
     }
 private:

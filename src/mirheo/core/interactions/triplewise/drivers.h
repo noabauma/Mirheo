@@ -44,9 +44,9 @@ __launch_bounds__(128, 16)
 __global__ void computeTriplewiseSelfInteractions(
         CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler)
 {
-
     const int dstId = blockIdx.x*blockDim.x + threadIdx.x;
-    if (dstId >= dstView.size) return;
+    if (dstId >= dstView.size)
+        return;
 
     const auto dstP = handler.read(dstView, dstId);
 
@@ -75,7 +75,7 @@ __global__ void computeTriplewiseSelfInteractions(
 
             for (int cellZ2 = cellZ1; cellZ2 <= cellZMax; ++cellZ2)
             {
-                for (int cellY2 = (cellZ1 == cellZ2)? cellY1 : cellYMin; cellY2 <= cellYMax; ++cellY2)
+                for (int cellY2 = (cellZ1 == cellZ2) ? cellY1 : cellYMin; cellY2 <= cellYMax; ++cellY2)
                 {
                     const int rowStart2 = cinfo.encode(cellXMin, cellY2, cellZ2);
                     const int rowEnd2 = cinfo.encode(cellXMax, cellY2, cellZ2);
@@ -86,19 +86,21 @@ __global__ void computeTriplewiseSelfInteractions(
                     for (int srcId1 = pstart1; srcId1 < pend1; ++srcId1)
                     {
                         handler.readCoordinates(srcP1, srcView, srcId1);
-                        bool interacting_01 = handler.withinCutoff(dstP, srcP1);
-                        for (int srcId2 = (cellZ2 == cellZ1) && (cellY2 == cellY1)? srcId1 + 1 : pstart2; srcId2 < pend2; ++srcId2)
+                        const bool interacting01 = handler.withinCutoff(dstP, srcP1);
+                        for (int srcId2 = (cellZ2 == cellZ1) && (cellY2 == cellY1) ? srcId1 + 1 : pstart2; srcId2 < pend2; ++srcId2)
                         {
                             if(InteractType == InteractionType::Local && (dstId == srcId1 || dstId == srcId2)) continue;
 
                             handler.readCoordinates(srcP2, srcView, srcId2);
 
-                            bool interacting_20 = handler.withinCutoff(dstP , srcP2);
-                            bool interacting_12 = handler.withinCutoff(srcP1, srcP2);
+                            const bool interacting20 = handler.withinCutoff(dstP , srcP2);
+                            const bool interacting12 = handler.withinCutoff(srcP1, srcP2);
 
-                            if ((interacting_01 && interacting_12) || (interacting_12 && interacting_20) || (interacting_20 && interacting_01)) //atleast 2 vectors should be close
+                            // At least 2 vectors should be close. In future,
+                            // the exact behavior may be a property of the interaction.
+                            if ((interacting01 && interacting12) || (interacting12 && interacting20) || (interacting20 && interacting01))
                             {
-                                handler.readExtraData(srcP1, srcView, srcId1);    //SW3 & Dummy doesn't need this
+                                handler.readExtraData(srcP1, srcView, srcId1);
                                 handler.readExtraData(srcP2, srcView, srcId2);
                                 
                                 const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
@@ -107,7 +109,7 @@ __global__ void computeTriplewiseSelfInteractions(
                                 {
                                     frc_ += val[0];
                                 }
-                                else if(InteractWith == InteractionWith::Other)
+                                else // Other
                                 {
                                     atomicAdd(srcView.forces + srcId1, val[1]);
                                     atomicAdd(srcView.forces + srcId2, val[2]);
