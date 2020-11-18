@@ -38,7 +38,8 @@ def brute_force(positions, domain, rc, epsilon):
 
 def main():
     # Use a small domain to have a relatively large density with few particles.
-    domain = (7.0, 7.0, 7.0)
+    # domain = (10.0, 10.0, 10.0)
+    domain = (4.0, 4.0, 4.0)
     rc = 1.0
     epsilon = 10.0
 
@@ -50,7 +51,7 @@ def main():
     #     [0.01, 0.01, 9.99],
     #     [0.02, 9.99, 0.01]
     # ])
-    # particles = np.random.rand(120, 3) * domain
+    # particles = np.random.rand(int(1.5 * domain[0] * domain[1] * domain[2]), 3) * domain
     # np.savetxt('particles.csv', particles, fmt='%f', delimiter=',')
 
     vel = np.zeros(particles.shape)
@@ -73,7 +74,7 @@ def main():
     u.registerPlugins(mir.Plugins.createForceSaver('forces', pv))
     u.registerPlugins(mir.Plugins.createDumpParticles('force_dump', pv, dump_every, ["forces"], 'h5/dummy-'))
 
-    u.run(2, dt=0.0001)
+    u.run(2, dt=0)
 
     if rank == 0:
         f = h5py.File('h5/dummy-00001.h5', 'r')

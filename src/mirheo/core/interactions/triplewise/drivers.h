@@ -18,15 +18,11 @@ namespace mirheo
 {
 
 ///Template parameter for whether we need to add force to dst(Self) or src(Other)
-enum class InteractionWith
-{
-    Self, Other
-};
-
-
 enum class InteractionType
 {
-    Local, Halo
+    LLL,
+    HLL,
+    LHH,
 };
 
 /** \brief Compute triplewise interactions within a single ParticleVector.
@@ -39,8 +35,8 @@ enum class InteractionType
     Mapping is one thread per particle.
     TODO: Explain the algorithm.
   */
-template<InteractionWith InteractWith, InteractionType InteractType, typename Handler>
-__launch_bounds__(128, 16)
+template <InteractionType InteractType, typename Handler>
+// __launch_bounds__(128, 16)
 __global__ void computeTriplewiseSelfInteractions(
         CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler)
 {
@@ -56,12 +52,13 @@ __global__ void computeTriplewiseSelfInteractions(
 
     const int3 cell0 = cinfo.getCellIdAlongAxes(handler.getPosition(dstP));
     
-    const int cellZMin = math::max(cell0.z-1, 0);
-    const int cellZMax = math::min(cell0.z+1, cinfo.ncells.z-1);
-    const int cellYMin = math::max(cell0.y-1, 0);
-    const int cellYMax = math::min(cell0.y+1, cinfo.ncells.y-1);
-    const int cellXMin = math::max(cell0.x-1, 0);
-    const int cellXMax = math::min(cell0.x+2, cinfo.ncells.x);
+    constexpr int padding = InteractType == InteractionType::LHH ? 2 : 1;
+    const int cellZMin = math::max(cell0.z - padding, 0);
+    const int cellZMax = math::min(cell0.z + padding, cinfo.ncells.z - 1);
+    const int cellYMin = math::max(cell0.y - padding, 0);
+    const int cellYMax = math::min(cell0.y + padding, cinfo.ncells.y - 1);
+    const int cellXMin = math::max(cell0.x - padding, 0);
+    const int cellXMax = math::min(cell0.x + padding + 1, cinfo.ncells.x);
 
     for (int cellZ1 = cellZMin; cellZ1 <= cellZMax; ++cellZ1)
     {
@@ -87,41 +84,47 @@ __global__ void computeTriplewiseSelfInteractions(
                     {
                         handler.readCoordinates(srcP1, srcView, srcId1);
                         const bool interacting01 = handler.withinCutoff(dstP, srcP1);
+                        real3 force1 = make_real3(0.0_r);
                         for (int srcId2 = (cellZ2 == cellZ1) && (cellY2 == cellY1) ? srcId1 + 1 : pstart2; srcId2 < pend2; ++srcId2)
                         {
-                            if(InteractType == InteractionType::Local && (dstId == srcId1 || dstId == srcId2)) continue;
+                            if (InteractType == InteractionType::LLL && (dstId == srcId1 || dstId == srcId2)) continue;
 
                             handler.readCoordinates(srcP2, srcView, srcId2);
 
                             const bool interacting20 = handler.withinCutoff(dstP , srcP2);
                             const bool interacting12 = handler.withinCutoff(srcP1, srcP2);
 
-                            // At least 2 vectors should be close. In future,
-                            // the exact behavior may be a property of the interaction.
-                            if ((interacting01 && interacting12) || (interacting12 && interacting20) || (interacting20 && interacting01))
-                            {
+                            bool condition;
+                            if (InteractType == InteractionType::LLL) {
+                                condition = interacting01 && interacting20 && (
+                                        !interacting12
+                                        || (dstId < srcId1 && dstId < srcId2));
+                            } else { // HLL or LHH
+                                condition = (interacting01 && interacting12)
+                                         || (interacting12 && interacting20)
+                                         || (interacting20 && interacting01);
+                            }
+                            if (condition) {
                                 handler.readExtraData(srcP1, srcView, srcId1);
                                 handler.readExtraData(srcP2, srcView, srcId2);
                                 
                                 const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
-
-                                if(InteractWith == InteractionWith::Self)
-                                {
+                                if (InteractType != InteractionType::HLL)
                                     frc_ += val[0];
-                                }
-                                else // Other
-                                {
-                                    atomicAdd(srcView.forces + srcId1, val[1]);
+                                if (InteractType != InteractionType::LHH) {
+                                    force1 += val[1];
                                     atomicAdd(srcView.forces + srcId2, val[2]);
                                 }
                             }
                         }
+                        if (InteractType != InteractionType::LHH)
+                            atomicAdd(srcView.forces + srcId1, force1);
                     }
                 } //cellY2
             } //cellZ2
         } //cellY1
     } //cellZ1
-    if(InteractWith == InteractionWith::Self)
+    if (InteractType != InteractionType::HLL)
         atomicAdd(dstView.forces + dstId, frc_); 
 }
 

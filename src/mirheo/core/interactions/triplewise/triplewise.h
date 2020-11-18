@@ -206,7 +206,7 @@ private:
                 auto cinfo = cl1->cellInfo();
                 
                 SAFE_KERNEL_LAUNCH(
-                        (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Local>),
+                        computeTriplewiseSelfInteractions<InteractionType::LLL>,
                         getNblocks(np, nth), nth, 0, stream,
                         cinfo, view, view, kernel_.handler());
             }   
@@ -240,17 +240,15 @@ private:
 
         const int nth = 128;
 
-        // halo-local-local
         kernel_.setup(clHalo, clLocal, clLocal, getState());
         SAFE_KERNEL_LAUNCH(
-                (computeTriplewiseSelfInteractions<InteractionWith::Other, InteractionType::Halo>),
+                computeTriplewiseSelfInteractions<InteractionType::HLL>,
                 getNblocks(viewHalo.size, nth), nth, 0, stream,
                 cinfoLocal, viewHalo, viewLocal, kernel_.handler());
 
-        // local-halo-halo
         kernel_.setup(clLocal, clHalo, clHalo, getState());
         SAFE_KERNEL_LAUNCH(
-                (computeTriplewiseSelfInteractions<InteractionWith::Self, InteractionType::Halo>),
+                computeTriplewiseSelfInteractions<InteractionType::LHH>,
                 getNblocks(viewLocal.size, nth), nth, 0, stream,
                  cinfoHalo, viewLocal, viewHalo, kernel_.handler());
     }
