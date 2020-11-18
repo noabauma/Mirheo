@@ -16,7 +16,7 @@ def brute_force(positions, domain, rc, epsilon):
     domain = np.array(domain)
 
     N = len(positions)
-    assert N != 3, "Just in case, don't use N == 3, numpy might do the wrong thing"
+    #assert N != 3, "Just in case, don't use N == 3, numpy might do the wrong thing"
 
     # Preprocess a 0-1 matrix within_cutoff[i, j] denoting whether or not
     # particles i and j are within the cutoff.
@@ -46,10 +46,10 @@ def main():
 
     # particles = np.loadtxt("particles.csv", delimiter=',')
     particles = np.array([
-        [0.1, 5.0, 5.01],
-        [0.2, 5.0, 5.02],
-        [5.0, 5.0, 5.03],
-        [9.9, 5.0, 5.04],
+        [0.01, 0.01, 0.01],
+        [9.99, 0.01, 0.01],
+        [0.01, 9.99, 0.01],
+        [0.01, 0.01, 9.99]
     ])
     velo = np.zeros((particles.shape[0],3))
     # Random particle positions:
