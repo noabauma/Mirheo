@@ -32,8 +32,6 @@ public:
         if (drA2 >= rc2_ || drB2 >= rc2_ || drAB2 >= rc2_)
             return {zero, zero, zero};
         */
-        // First number is to count the interactions, last to identify the
-        // particle (note that p*.r.x is in local coordinate system).
         return {
             make_real3(epsilon_, 0.0_r, 0.0_r),
             make_real3(epsilon_, 0.0_r, 0.0_r),

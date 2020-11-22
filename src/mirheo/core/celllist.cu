@@ -89,6 +89,18 @@ __global__ void accumulateKernel(int n, T *dst, CellListInfo cinfo, const T *src
     dst[pid] += src[srcId];
 }
 
+template <typename T>
+__global__ void accumulateKernelAtomic(int n, T *dst, CellListInfo cinfo, const T *src)
+{
+    int pid = blockIdx.x * blockDim.x + threadIdx.x;
+    if (pid >= n) return;
+
+    int srcId = cinfo.order[pid];
+
+    assert(srcId != INVALID);
+    atomicAdd(&dst[pid], src[srcId]);
+}
+
 } // namespace cell_list_kernels
 
 //=================================================================================
@@ -326,6 +338,32 @@ static void accumulateIfHasAddOperator(PinnedBuffer<T> *src,
         n, dst->devPtr(), cinfo, src->devPtr() );
 }
 
+static void accumulateIfHasAtomicAddOperator(
+        __UNUSED GPUcontainer *src,
+        __UNUSED GPUcontainer *dst,
+        __UNUSED int n, __UNUSED CellListInfo cinfo,
+        __UNUSED cudaStream_t stream)
+{
+    die("Cannot accumulate entries: atomicAdd not supported for this type");
+}
+
+// use SFINAE to choose between additionable types
+template <typename T,
+          typename = void_t<decltype(atomicAdd(std::declval<T*>(), std::declval<T>()))>>
+static void accumulateIfHasAtomicAddOperator(
+        PinnedBuffer<T> *src,
+        PinnedBuffer<T> *dst,
+        int n, CellListInfo cinfo,
+        cudaStream_t stream)
+{
+    const int nthreads = 128;
+
+    SAFE_KERNEL_LAUNCH(
+        cell_list_kernels::accumulateKernelAtomic,
+        getNblocks(n, nthreads), nthreads, 0, stream,
+        n, dst->devPtr(), cinfo, src->devPtr() );
+}
+
 void CellList::_accumulateExtraData(const std::string& channelName, cudaStream_t stream)
 {
     const int n = srcLPV_->size();
@@ -343,12 +381,38 @@ void CellList::_accumulateExtraData(const std::string& channelName, cudaStream_t
     }, contDesc.varDataPtr);
 }
 
+void CellList::_accumulateExtraDataAtomic(const std::string& channelName, cudaStream_t stream)
+{
+    const int n = srcLPV_->size();
+
+    const auto& pvManager   = srcLPV_->dataPerParticle;
+    const auto& contManager = localPV_->dataPerParticle;
+
+    const auto& pvDesc   = pvManager  .getChannelDescOrDie(channelName);
+    const auto& contDesc = contManager.getChannelDescOrDie(channelName);
+
+    mpark::visit([&](auto srcPinnedBuff)
+    {
+        auto dstPinnedBuff = mpark::get<decltype(srcPinnedBuff)>(pvDesc.varDataPtr);
+        accumulateIfHasAtomicAddOperator(srcPinnedBuff, dstPinnedBuff, n, this->cellInfo(), stream);
+    }, contDesc.varDataPtr);
+}
+
 void CellList::accumulateChannels(const std::vector<std::string>& channelNames, cudaStream_t stream)
 {
     for (const auto& channelName : channelNames)
     {
         debug2("%s : accumulating channel '%s'", _makeName().c_str(), channelName.c_str());
         _accumulateExtraData(channelName, stream);
+    }
+}
+
+void CellList::accumulateChannelsAtomic(const std::vector<std::string>& channelNames, cudaStream_t stream)
+{
+    for (const auto& channelName : channelNames)
+    {
+        debug2("%s : atomically accumulating channel '%s'", _makeName().c_str(), channelName.c_str());
+        _accumulateExtraDataAtomic(channelName, stream);
     }
 }
 

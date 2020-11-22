@@ -188,6 +188,12 @@ public:
      */
     virtual void accumulateChannels(const std::vector<std::string>& channelNames, cudaStream_t stream);
 
+    /** \brief Same as `accumulateChannels`, but += is replaced with atomicAdd.
+        \param [in] channelNames List that contains the names of all the channels to accumulate
+        \param [in] stream Execution stream
+     */
+    virtual void accumulateChannelsAtomic(const std::vector<std::string>& channelNames, cudaStream_t stream);
+
     /** \brief Copy the channels from the attached ParticleVector to the cell-lists data.
         \param [in] channelNames List that contains the names of all the channels to copy
         \param [in] stream Execution stream
@@ -246,6 +252,9 @@ protected:
 
     /// see accumulateChannels(); for one channel.
     void _accumulateExtraData(const std::string& channelName, cudaStream_t stream);
+
+    /// see accumulateChannelsAtomic(); for one channel.
+    void _accumulateExtraDataAtomic(const std::string& channelName, cudaStream_t stream);
 
     /** reorder a given channel according to the internal map
         \param [in] channelName The name of the channel to reorder

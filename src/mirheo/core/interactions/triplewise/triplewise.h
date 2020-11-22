@@ -204,7 +204,7 @@ private:
         {
             CellList *clRefined = &_getOrCreateCellLists(pv1, cl1)->refinedLocal;
             clRefined->build(stream);
-            const auto view = cl1->getView<ViewType>();
+            const auto view = clRefined->getView<ViewType>();
             if (view.size < 3)
                 return;
 
@@ -225,7 +225,7 @@ private:
                     clRefined->cellInfo(), view, view, kernel_.handler());
 
             // Accumulate forces back to the particle vector.
-            clRefined->accumulateChannels(channelNames, stream);
+            clRefined->accumulateChannelsAtomic(channelNames, stream);
         }
         else /*  External interaction */
         {
