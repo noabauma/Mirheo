@@ -145,7 +145,7 @@ void IntegratorSubStepShardlowSweep::execute(ParticleVector *pv, cudaStream_t st
     slowForces_.copyFromDevice(pv->local()->forces(), stream);
 
     // initialize the forces for the first half step
-    fastForces_->local(pv, pv, nullptr, nullptr, stream);
+    fastForces_->local(pv, pv, pv, nullptr, nullptr, nullptr, stream);
 
     // save previous positions
     previousPositions_.copyFromDevice(pv->local()->positions(), stream);
@@ -168,7 +168,7 @@ void IntegratorSubStepShardlowSweep::execute(ParticleVector *pv, cudaStream_t st
             pvView, dt_2m, dt);
 
         pv->local()->forces().copy(slowForces_, stream);
-        fastForces_->local(pv, pv, nullptr, nullptr, stream);
+        fastForces_->local(pv, pv, pv, nullptr, nullptr, nullptr, stream);
 
         SAFE_KERNEL_LAUNCH(
             rbc_shardlow_kernels::velocityVerletStep2,
@@ -187,7 +187,7 @@ void IntegratorSubStepShardlowSweep::setPrerequisites(ParticleVector *pv)
     if (auto *mv = dynamic_cast<MembraneVector*>(pv))
     {
         // luckily do not need cell lists for self interactions
-        fastForces_->setPrerequisites(pv, pv, nullptr, nullptr);
+        fastForces_->setPrerequisites(pv, pv, pv, nullptr, nullptr, nullptr);
 
         auto mesh = dynamic_cast<MembraneMesh*>(mv->mesh.get());
         assert(mesh);
