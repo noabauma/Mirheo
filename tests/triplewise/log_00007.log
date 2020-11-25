@@ -1,11 +1,11 @@
-15:42:38:129  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:55 Compiled with maximum debug level 10
-15:42:38:129  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:57 Debug level requested 3, set to 3
-15:42:38:129  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:113 Program started, splitting communicator
-15:42:38:130  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:27 Postprocessing initialized
-15:42:38:130  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:34 New plugin registered: force_dump
-15:42:39:331  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:114 Postprocess is listening to messages now
-15:42:39:331  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:26 Writing XDMF data to h5/sw3-00000[.h5,.xmf]
-15:42:39:334  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:32 Writing took 2.576337 ms
-15:42:39:337  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:26 Writing XDMF data to h5/sw3-00001[.h5,.xmf]
-15:42:39:339  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:32 Writing took 1.582319 ms
-15:42:39:342  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:125 Postprocess got a stopping message and will stop now
+11:11:23:251  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:55 Compiled with maximum debug level 10
+11:11:23:251  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:57 Debug level requested 3, set to 3
+11:11:23:251  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:113 Program started, splitting communicator
+11:11:23:252  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:27 Postprocessing initialized
+11:11:23:252  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:34 New plugin registered: force_dump
+11:11:24:348  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:114 Postprocess is listening to messages now
+11:11:24:350  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:26 Writing XDMF data to h5/sw3-00000[.h5,.xmf]
+11:11:24:353  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:32 Writing took 3.630983 ms
+11:11:24:355  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:26 Writing XDMF data to h5/sw3-00001[.h5,.xmf]
+11:11:24:357  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/xdmf/xdmf.cpp:32 Writing took 2.268256 ms
+11:11:24:359  Rank 0007    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/postproc.cpp:125 Postprocess got a stopping message and will stop now
