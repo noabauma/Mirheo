@@ -36,6 +36,16 @@ make install
 
 ### unreleased
 
+* Add particle averager plugin
+* Add binding (spring) interaction between particle vectors
+* Add Shardlow integrator for membranes
+* Docs: Add ADE model and add the corresponding reference.
+* **interface changes**
+  * remove `setSpecificPair` from pirwise interactions. The same effect can be obtained by creating more pairwise interactions instead.
+
+
+### v1.5.0
+
 * Add MSD plugin.
 * update pybind11 submodule.
 * update variant submodule (now supports nvcc-10.2).

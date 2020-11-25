@@ -33,6 +33,7 @@ set(sources_cpp
   logger.cpp
   managers/interactions.cpp
   marching_cubes.cpp
+  mesh/edge_colors.cpp
   mesh/factory.cpp
   mesh/membrane.cpp
   mesh/mesh.cpp
@@ -102,12 +103,14 @@ set(sources_cu
   integrators/const_omega.cu
   integrators/minimize.cu
   integrators/oscillate.cu
+  integrators/rbc_shardlow.cu
   integrators/rigid_vv.cu
   integrators/translate.cu
   integrators/vv.cu
   interactions/membrane/base_membrane.cu
   interactions/membrane/factory.cu
   interactions/membrane/prerequisites.cu
+  interactions/obj_binding.cu
   interactions/obj_rod_binding.cu
   interactions/pairwise/factory.cu
   interactions/rod/factory.cu
