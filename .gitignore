@@ -28,4 +28,3 @@ build/
 /Mirheo.egg-info/
 /dist/
 .vscode/
-*.log
