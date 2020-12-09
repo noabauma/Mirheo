@@ -22,12 +22,22 @@ void exportPlugins(py::module& m)
     py::handlers_class<PostprocessPlugin> pypost(m, "PostprocessPlugin", R"(
         Base postprocess plugin class
     )");
+    
+    m.def("__createAddPerParticleForce", &plugin_factory::createAddPerParticleForcePlugin,
+          "compute_task"_a, "state"_a, "name"_a, "pv"_a, "channel_name"_a, R"(
+        This plugin will add a specific constant force to specific particles of a specific PV every time-step.
+        It is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
 
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            channel_name: channel name of the extra force
+    )");
 
     m.def("__createAddForce", &plugin_factory::createAddForcePlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "force"_a, R"(
         This plugin will add constant force :math:`\mathbf{F}_{extra}` to each particle of a specific PV every time-step.
-        Is is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
+        It is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
 
         Args:
             name: name of the plugin

@@ -1,6 +1,7 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #include "factory.h"
 
+#include "add_perparticleforce.h"
 #include "add_force.h"
 #include "add_torque.h"
 #include "anchor_particle.h"
@@ -51,6 +52,12 @@ static std::vector<std::string> extractPVNames(const std::vector<ParticleVector*
     for (auto &pv : pvs)
         pvNames.push_back(pv->getName());
     return pvNames;
+}
+
+PairPlugin createAddPerParticleForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, std::string channel_name)
+{
+    auto simPl = computeTask ? std::make_shared<AddPerParticleForcePlugin> (state, name, pv->getName(), channel_name) : nullptr;
+    return { simPl, nullptr };
 }
 
 PairPlugin createAddForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force)

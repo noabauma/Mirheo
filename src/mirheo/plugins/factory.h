@@ -22,6 +22,9 @@ namespace plugin_factory
 using PairPlugin = std::pair<std::shared_ptr<SimulationPlugin>,
                              std::shared_ptr<PostprocessPlugin>>;
 
+PairPlugin createAddPerParticleForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, std::string channel_name);
+
+PairPlugin createAddSpecificForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force);
 
 PairPlugin createAddForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force);
 

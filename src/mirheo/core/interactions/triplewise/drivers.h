@@ -37,7 +37,7 @@ enum class InteractionType
   */
 template <InteractionType InteractType, typename Handler>
 // __launch_bounds__(128, 16)
-__global__ void computeTriplewiseSelfInteractions(
+__device__ void computeTriplewiseSelfInteractions(
         CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler)
 {
     const int dstId = blockIdx.x*blockDim.x + threadIdx.x;
@@ -127,6 +127,22 @@ __global__ void computeTriplewiseSelfInteractions(
     } //cellZ1
     if (InteractType != InteractionType::HLL)
         atomicAdd(dstView.forces + dstId, frc_);
+}
+
+//Debugging purpose (nvvp)
+template <typename Handler>
+__global__ void LLL_(CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler){
+    computeTriplewiseSelfInteractions<InteractionType::LLL>(cinfo, dstView, srcView, handler);
+}
+
+template <typename Handler>
+__global__ void LHH_(CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler){
+    computeTriplewiseSelfInteractions<InteractionType::LHH>(cinfo, dstView, srcView, handler);
+}
+
+template <typename Handler>
+__global__ void HLL_(CellListInfo cinfo, typename Handler::ViewType dstView, typename Handler::ViewType srcView, Handler handler){
+    computeTriplewiseSelfInteractions<InteractionType::HLL>(cinfo, dstView, srcView, handler);
 }
 
 } // namespace mirheo

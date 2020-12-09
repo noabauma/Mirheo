@@ -219,8 +219,10 @@ private:
             clRefined->clearChannels(channelNames, stream);
 
             const int nth = 128;
+
+
             SAFE_KERNEL_LAUNCH(
-                    computeTriplewiseSelfInteractions<InteractionType::LLL>,
+                    LLL_,
                     getNblocks(view.size, nth), nth, 0, stream,
                     clRefined->cellInfo(), view, view, kernel_.handler());
 
@@ -253,20 +255,21 @@ private:
         auto cinfoLocal = clLocal->cellInfo();
         auto cinfoHalo = clHalo->cellInfo();
 
-
         const int nth = 128;
-
+        
         kernel_.setup(clHalo, clLocal, clLocal, getState());
+
         SAFE_KERNEL_LAUNCH(
-                computeTriplewiseSelfInteractions<InteractionType::HLL>,
+                HLL_,
                 getNblocks(viewHalo.size, nth), nth, 0, stream,
                 cinfoLocal, viewHalo, viewLocal, kernel_.handler());
-
+        
         kernel_.setup(clLocal, clHalo, clHalo, getState());
+
         SAFE_KERNEL_LAUNCH(
-                computeTriplewiseSelfInteractions<InteractionType::LHH>,
+                LHH_,
                 getNblocks(viewLocal.size, nth), nth, 0, stream,
-                 cinfoHalo, viewLocal, viewHalo, kernel_.handler());
+                cinfoHalo, viewLocal, viewHalo, kernel_.handler());
     }
 
 private:

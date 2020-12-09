@@ -10,6 +10,7 @@ set(sources_cpp
   )
 
 set(sources_cu
+  add_perparticleforce.cu
   add_force.cu
   add_torque.cu
   anchor_particle.cu
