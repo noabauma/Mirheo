@@ -190,6 +190,74 @@ py_types::VectorOfReal3 ParticleVector::getForces_vector()
     return res;
 }
 
+void ParticleVector::updateChannel(const std::string channelName, const std::vector<real3> values)
+{
+    PinnedBuffer<real3>* container = local()->dataPerParticle.getData<real3>(channelName);
+
+    const size_t n = container->size();
+    if(values.size() != n){
+        throw std::invalid_argument("New Array of size: " + std::to_string(values.size()) + 
+        " not the same size as " + channelName + 
+        ": " + std::to_string(n) + "\n");
+    }
+
+    for(size_t i = 0; i < n; ++i){
+        (*container)[i].x = values[i].x;
+        (*container)[i].y = values[i].y;
+        (*container)[i].z = values[i].z;
+    }
+    
+    container->uploadToDevice(defaultStream);
+}
+
+void ParticleVector::scaleChannel(const std::string channelName, const real scale)
+{
+    PinnedBuffer<real3>* container = local()->dataPerParticle.getData<real3>(channelName);
+
+    container->downloadFromDevice(defaultStream);
+
+    const size_t n = container->size();
+    
+    for(size_t i = 0; i < n; ++i){
+        (*container)[i].x *= scale;
+        (*container)[i].y *= scale;
+        (*container)[i].z *= scale;
+    }
+    
+    container->uploadToDevice(defaultStream);
+}
+
+void ParticleVector::additiveUpdateChannel(const std::string channelName, const real value)
+{
+    PinnedBuffer<real3>* container = local()->dataPerParticle.getData<real3>(channelName);
+
+    container->downloadFromDevice(defaultStream);
+
+    const size_t n = container->size();
+    
+    for(size_t i = 0; i < n; ++i){
+        if((*container)[i].x > 0.0_r){
+            (*container)[i].x += value;
+        }else if((*container)[i].x < 0.0_r){
+            (*container)[i].x -= value;
+        }
+
+        if((*container)[i].y > 0.0_r){
+            (*container)[i].y += value;
+        }else if((*container)[i].y < 0.0_r){
+            (*container)[i].y -= value;
+        }
+
+        if((*container)[i].z > 0.0_r){
+            (*container)[i].z += value;
+        }else if((*container)[i].z < 0.0_r){
+            (*container)[i].z -= value;
+        }
+    }
+    
+    container->uploadToDevice(defaultStream);
+}
+
 void ParticleVector::setCoordinates_vector(const std::vector<real3>& coordinates)
 {
     auto& pos = local()->positions();

@@ -44,7 +44,7 @@ void AddPerParticleForcePlugin::beforeForces(cudaStream_t stream)
     SAFE_KERNEL_LAUNCH(
             add_force_kernels::addForce,
             getNblocks(view.size, nthreads), nthreads, 0, stream,
-            view, pv_->local()->dataPerParticle.getData<real3>(channel_name_)->devPtr() );
+            view, pv_->local()->dataPerParticle.getData<real3>(channel_name_)->devPtr());
 }
 
 } // namespace mirheo

@@ -154,6 +154,9 @@ public:
     py_types::VectorOfReal3 getVelocities_vector();
     py_types::VectorOfReal3 getForces_vector();
 
+    void updateChannel(std::string channelName, std::vector<real3> values);
+    void scaleChannel(std::string channelName, real scale);
+    void additiveUpdateChannel(const std::string channelName, const real value);
     void setCoordinates_vector(const std::vector<real3>& coordinates);
     void setVelocities_vector(const std::vector<real3>& velocities);
     void setForces_vector(const std::vector<real3>& forces);
