@@ -47,6 +47,8 @@ __device__ void computeTriplewiseSelfInteractions(
     const auto dstP = handler.read(dstView, dstId);
 
     real3 frc_ = make_real3(0.0_r);
+
+    //real4 * __restrict__ srcForces = srcView.forces;
     
     typename Handler::ParticleType srcP1, srcP2;
 
@@ -109,7 +111,7 @@ __device__ void computeTriplewiseSelfInteractions(
                                 handler.readExtraData(srcP1, srcView, srcId1);
                                 handler.readExtraData(srcP2, srcView, srcId2);
 
-                                const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, dstId, srcId1, srcId2);
+                                const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, interacting01, interacting12, interacting20);
                                 if (InteractType != InteractionType::HLL)
                                     frc_ += val[0];
                                 if (InteractType != InteractionType::LHH) {
