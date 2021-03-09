@@ -1,40 +1,40 @@
-12:10:30:833  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:62 Compiled with maximum debug level 10
-12:10:30:833  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:64 Debug level requested 3, set to 3
-12:10:30:833  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:113 Program started, splitting communicator
-12:10:30:834  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:59 Detected 8 ranks per node, my intra-node ID will be 5
-12:10:31:068  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:66 Found 1 GPUs per node, will use GPU 0
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:163 Simulation initialized, subdomain size is [4.000000 4.000000 4.000000], subdomain starts at [4.000000 0.000000 4.000000]
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'old_positions'
-12:10:31:079  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'old_positions'
-12:10:32:027  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:312 Registered particle vector 'pv', 0 particles
-12:10:32:028  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1267 Simulation initiated
-12:10:32:028  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:570 Preparing cell-lists
-12:10:32:028  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
-12:10:32:028  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
-12:10:32:028  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
-12:10:32:036  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:645 Preparing interactions
-12:10:32:036  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:675 Preparing object bouncers
-12:10:32:036  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:704 Preparing walls
-12:10:32:036  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:734 Preparing plugins
-12:10:32:047  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'forces'
-12:10:32:047  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'forces'
-12:10:32:047  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/plugins/dump_particles.cu:73 Plugin force_dump initialized for the following particle vector: pv
-12:10:32:047  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:740 done Preparing plugins
-12:10:32:049  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/exchangers/particle_redistributor.cu:159 Particle redistributor takes pv 'pv'
-12:10:32:049  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/exchangers/particle_halo_exchanger.cu:171 Particle halo exchanger takes pv 'pv' with celllist of rc = 4, with channels: 'positions' 'velocities' 
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1284 Time-step is set to 0.000100
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:869 Splitting particle vectors with respect to object belonging
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1302 Will run 2 iterations now
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
-12:10:32:050  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
-12:10:32:051  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
-12:10:32:051  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
-12:10:32:051  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
-12:10:32:063  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1318 Finished with 2 iterations
+23:06:40:275  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:62 Compiled with maximum debug level 10
+23:06:40:275  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/logger.cpp:64 Debug level requested 3, set to 3
+23:06:40:275  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:113 Program started, splitting communicator
+23:06:40:276  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:59 Detected 8 ranks per node, my intra-node ID will be 5
+23:06:40:454  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/mirheo.cpp:66 Found 1 GPUs per node, will use GPU 0
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:163 Simulation initialized, subdomain size is [4.000000 4.000000 4.000000], subdomain starts at [4.000000 0.000000 4.000000]
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'old_positions'
+23:06:40:466  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'old_positions'
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:312 Registered particle vector 'pv', 0 particles
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1267 Simulation initiated
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:570 Preparing cell-lists
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
+23:06:41:362  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
+23:06:41:364  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:645 Preparing interactions
+23:06:41:364  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:675 Preparing object bouncers
+23:06:41:364  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:704 Preparing walls
+23:06:41:364  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:734 Preparing plugins
+23:06:41:380  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'forces'
+23:06:41:380  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'forces'
+23:06:41:381  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/plugins/dump_particles.cu:73 Plugin force_dump initialized for the following particle vector: pv
+23:06:41:381  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:740 done Preparing plugins
+23:06:41:382  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/exchangers/particle_redistributor.cu:159 Particle redistributor takes pv 'pv'
+23:06:41:382  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/exchangers/particle_halo_exchanger.cu:171 Particle halo exchanger takes pv 'pv' with celllist of rc = 4, with channels: 'positions' 'velocities' 
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1284 Time-step is set to 0.000100
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:869 Splitting particle vectors with respect to object belonging
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1302 Will run 2 iterations now
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'positions'
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel 'velocities'
+23:06:41:384  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/pvs/data_manager.h:121 Creating new channel '__forces'
+23:06:41:397  Rank 0010    INFO at /home/noabauma/src/Mirheo/src/mirheo/core/simulation.cpp:1318 Finished with 2 iterations

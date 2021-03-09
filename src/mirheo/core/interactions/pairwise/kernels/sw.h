@@ -55,9 +55,10 @@ public:
         const real r_rc = dr_ - rc_;
         const real exp = math::exp(sigma_ / r_rc);
         const real A_eps_exp = A_*epsilon_*exp;
-        const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*dr_) + (4.0_r*B_rs4*A_eps_exp)/dr2;
+        //const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*dr_) + (4.0_r*B_rs4*A_eps_exp)/dr2;
+        const real phi = (sigma_*(B_rs4 - 1.0_r))/(r_rc*r_rc*dr_) + (4.0_r*B_rs4)/dr2;
 
-        return phi * dr;
+        return A_eps_exp * phi * dr;
     }
 
     /// initialize accumulator

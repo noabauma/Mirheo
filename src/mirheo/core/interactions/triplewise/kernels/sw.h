@@ -26,6 +26,7 @@ public:
         gamma_sigma_(gamma*sigma)
         {}
 
+    /*
     __D__ inline std::array<real3, 3> operator()(ParticleType p_i, ParticleType p_j, ParticleType p_k, const bool interacting_ij, const bool interacting_jk, const bool interacting_ki) const
     {
         const real3 r_ij = p_i.r - p_j.r;
@@ -108,8 +109,8 @@ public:
         }
         return {out[0], out[1], out[2]};
     }
-
-    /*
+    */
+    
     __D__ inline std::array<real3, 3> operator()(ParticleType p_i, ParticleType p_j, ParticleType p_k, const bool interacting_ij, const bool interacting_jk, const bool interacting_ki) const
     {
         //all
@@ -290,7 +291,7 @@ public:
         return {zeros, zeros, zeros};
         
     }
-    */
+    
     /*
     __D__ inline std::array<real3, 3> operator()(ParticleType p_i, ParticleType p_j, ParticleType p_k, int id_i, int id_j, int id_k) const
     {

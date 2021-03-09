@@ -48,7 +48,7 @@ __device__ void computeTriplewiseSelfInteractions(
 
     real3 frc_ = make_real3(0.0_r);
 
-    //real4 * __restrict__ srcForces = srcView.forces;
+    real4 * __restrict__ srcForces = srcView.forces;
     
     typename Handler::ParticleType srcP1, srcP2;
 
@@ -116,12 +116,12 @@ __device__ void computeTriplewiseSelfInteractions(
                                     frc_ += val[0];
                                 if (InteractType != InteractionType::LHH) {
                                     force1 += val[1];
-                                    atomicAdd(srcView.forces + srcId2, val[2]);
+                                    atomicAdd(srcForces + srcId2, val[2]);
                                 }
                             }
                         }
                         if (InteractType != InteractionType::LHH)
-                            atomicAdd(srcView.forces + srcId1, force1);
+                            atomicAdd(srcForces + srcId1, force1);
                     }
                 } //cellY2
             } //cellZ2
