@@ -9,6 +9,7 @@
 #include "average_relative_flow.h"
 #include "berendsen_thermostat.h"
 #include "channel_dumper.h"
+#include "copy_pv.h"
 #include "outlet.h"
 #include "density_control.h"
 #include "displacement.h"
@@ -39,6 +40,8 @@
 #include "virial_pressure.h"
 #include "wall_force_collector.h"
 #include "wall_repulsion.h"
+#include "stress_tensor.h"
+#include "save_total_force.h"
 
 namespace mirheo
 {
@@ -52,6 +55,12 @@ static std::vector<std::string> extractPVNames(const std::vector<ParticleVector*
     for (auto &pv : pvs)
         pvNames.push_back(pv->getName());
     return pvNames;
+}
+
+PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource)
+{
+    auto simPl = computeTask ? std::make_shared<CopyPVPlugin> (state, name, pvTarget->getName(), pvSource->getName()) : nullptr;
+    return { simPl, nullptr };
 }
 
 PairPlugin createAddPerParticleForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, std::string channel_name)
@@ -381,6 +390,22 @@ PairPlugin createStatsPlugin(bool computeTask, const MirState *state, std::strin
     auto simPl  = computeTask ? std::make_shared<SimulationStats> (state, name, every) : nullptr;
     auto postPl = computeTask ? nullptr : std::make_shared<PostprocessStats> (name, filename);
 
+    return { simPl, postPl };
+}
+
+PairPlugin createTotalForceSaverPlugin(bool computeTask, const MirState *state,  std::string name, ParticleVector *pv, 
+                                       int dumpEvery, std::string path)
+{
+    auto simPl  = computeTask ? std::make_shared<TotalForceSaverPlugin> (state, name, pv->getName(), dumpEvery) : nullptr;
+    auto postPl = computeTask ? nullptr : std::make_shared<TotalForceSaverDumper> (name, path);
+    return { simPl, postPl };
+}
+
+PairPlugin createStressTensorPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
+                                       int dumpEvery, std::string mask, std::string path)
+{
+    auto simPl  = computeTask ? std::make_shared<StressTensorPlugin> (state, name, pv->getName(), dumpEvery) : nullptr;
+    auto postPl = computeTask ? nullptr : std::make_shared<StressTensorDumper> (name, mask, path);
     return { simPl, postPl };
 }
 

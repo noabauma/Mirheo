@@ -22,6 +22,8 @@ namespace plugin_factory
 using PairPlugin = std::pair<std::shared_ptr<SimulationPlugin>,
                              std::shared_ptr<PostprocessPlugin>>;
 
+PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource);
+
 PairPlugin createAddPerParticleForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, std::string channel_name);
 
 PairPlugin createAddSpecificForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force);
@@ -121,6 +123,11 @@ PairPlugin createVelocityControlPlugin(bool computeTask, const MirState *state, 
 PairPlugin createRdfPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real maxDist, int nbins, std::string basename, int every);
 
 PairPlugin createStatsPlugin(bool computeTask, const MirState *state, std::string name, std::string filename, int every);
+
+PairPlugin createTotalForceSaverPlugin(bool computeTask, const MirState *state,  std::string name, ParticleVector *pv,  
+                                       int dumpEvery, std::string path);
+
+PairPlugin createStressTensorPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, int dumpEvery, std::string mask, std::string path);
 
 PairPlugin createTemperaturizePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector* pv, real kBT, bool keepVelocity);
 

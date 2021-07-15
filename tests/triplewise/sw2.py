@@ -28,6 +28,20 @@ def sw2_pot(r_i, r_j):
 
     return A*epsilon*(B*((sigma/r)**4) - 1.0)*np.exp(sigma/(r-rc))
 
+def sw2_for(r_i, r_j):  #this is a sanity check
+    r_ij = r_i - r_j
+    r2 = np.dot(r_ij,r_ij)
+    r  = np.sqrt(r2)
+    
+    rs2 = (sigma*sigma) / r2
+    B_rs4 = B * rs2 * rs2
+    r_rc = r - rc
+    exp = np.exp(sigma / r_rc)
+    A_eps_exp = A * epsilon * exp
+    phi = (sigma * (B_rs4 - 1.0))/(r_rc*r_rc*r) + (4.0*B_rs4)/r2
+
+    return phi * A_eps_exp * r_ij
+
 
 def withinCutOff(r,s):
     rs = r - s
@@ -42,6 +56,7 @@ def brute_force(particle):
     n = particle.shape[0]
     forces = np.zeros((n,3))
     grad_sw2_pot = grad(sw2_pot)
+    #grad_sw2_pot = sw2_for
 
     #2body
     for i in range(n):

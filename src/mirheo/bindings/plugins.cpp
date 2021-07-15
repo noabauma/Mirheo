@@ -22,6 +22,16 @@ void exportPlugins(py::module& m)
     py::handlers_class<PostprocessPlugin> pypost(m, "PostprocessPlugin", R"(
         Base postprocess plugin class
     )");
+
+    m.def("__createCopyPV", &plugin_factory::createCopyPVPlugin,
+          "compute_task"_a, "state"_a, "name"_a, "pvTarget"_a, "pvSource"_a, R"(
+        This plugin will copy one PV into another PV
+
+        Args:
+            name: name of the plugin
+            pvTarget: :any:`ParticleVector` that will have the copied file
+            pvSource: ParticleVector which will be copied
+    )");
     
     m.def("__createAddPerParticleForce", &plugin_factory::createAddPerParticleForcePlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "channel_name"_a, R"(
@@ -32,6 +42,29 @@ void exportPlugins(py::module& m)
             name: name of the plugin
             pv: :any:`ParticleVector` that we'll work with
             channel_name: channel name of the extra force
+    )");
+
+    m.def("__createStressTensor", &plugin_factory::createStressTensorPlugin,
+        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "mask"_a, "path"_a, R"(
+        This plugin outputs the Stress tensor of a specified pv into a CSV file (with timesteps)
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            dump_every: dumps at every so timestep Stress tensor into csv file
+            mask: Which Stresstensors have to be dumped ex: mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy
+            path: at which path the file should be output
+    )");
+
+    m.def("__createTotalForceSaver", &plugin_factory::createTotalForceSaverPlugin,
+        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "path"_a, R"(
+        This plugin outputs the total force in one desired coordinate of a specified pv into a CSV file (with timesteps)
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            dump_every: dumps at every so timestep total force into csv file
+            path: at which path the file should be output
     )");
 
     m.def("__createAddForce", &plugin_factory::createAddForcePlugin,

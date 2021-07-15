@@ -10,6 +10,8 @@ set(sources_cpp
   )
 
 set(sources_cu
+  save_total_force.cu
+  stress_tensor.cu
   add_perparticleforce.cu
   add_force.cu
   add_torque.cu
@@ -17,6 +19,7 @@ set(sources_cu
   average_flow.cu
   average_relative_flow.cu
   berendsen_thermostat.cu
+  copy_pv.cu
   density_control.cu
   displacement.cu
   dump_obj_stats.cu
