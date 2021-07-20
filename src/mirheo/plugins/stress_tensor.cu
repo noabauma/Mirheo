@@ -96,23 +96,38 @@ void StressTensorPlugin::handshake()
     _send(sendBuffer_);
 }
 
+//manually delete the halo forces (Not sure if important)
+void StressTensorPlugin::beforeForces(cudaStream_t stream){
+    pv_->halo()->forces().clearDevice(stream);
+}
+
 void StressTensorPlugin::beforeIntegration(cudaStream_t stream)
 {
     if (!isTimeEvery(getState(), dumpEvery_)) return;
 
-    PVview view(pv_, pv_->local());
+    PVview viewLocal(pv_, pv_->local());
 
     localStressTensor_.clear(stream);
 
     constexpr int nthreads = 128;
-    const int nblocks = getNblocks(view.size, nthreads);
+    const int nblocksL = getNblocks(viewLocal.size, nthreads);
 
     SAFE_KERNEL_LAUNCH(
         stress_tensor_kernels::totalStress,
-        nblocks, nthreads, 0, stream,
-        view, pv_->getMassPerParticle(), localStressTensor_.devPtr() );
+        nblocksL, nthreads, 0, stream,
+        viewLocal, pv_->getMassPerParticle(), localStressTensor_.devPtr() );
 
-        localStressTensor_.downloadFromDevice(stream, ContainersSynch::Synch);
+    //also summing up the halo forces (halo forces have to be saved as well!)
+    PVview viewHalo(pv_, pv_->halo());
+    const int nblocksH = getNblocks(viewHalo.size, nthreads);
+    SAFE_KERNEL_LAUNCH(
+        stress_tensor_kernels::totalStress,
+        nblocksH, nthreads, 0, stream,
+        viewHalo, pv_->getMassPerParticle(), localStressTensor_.devPtr() );
+
+    
+
+    localStressTensor_.downloadFromDevice(stream, ContainersSynch::Synch);
 
     savedTime_ = getState()->currentTime;
     needToSend_ = true;
@@ -146,7 +161,7 @@ void StressTensorDumper::setup(const MPI_Comm& comm, const MPI_Comm& interComm)
     activated_ = createFoldersCollective(comm, path_);
 
     if (mask_.size() != 9) {
-        throw std::invalid_argument("mask_.size() != 9, example mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy");
+        die("mask_.size() != 9, got %lu, example mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy\n", mask_.size());
     }
 
     comment_ += "time";
@@ -196,7 +211,7 @@ void StressTensorDumper::deserialize()
 
     MPI_Check( MPI_Reduce(&localStress, &totalStress, 9, dataType, MPI_SUM, 0, comm_) );
     
-    fprintf(fdump_.get(), "%g", curTime);
+    fprintf(fdump_.get(), "%.8e", curTime);
     for(int i = 0; i < 9; ++i){
         if(bool_mask[i]){
             fprintf(fdump_.get(), ",%.6e", totalStress.p[i]);

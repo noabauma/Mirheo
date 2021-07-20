@@ -25,6 +25,8 @@ enum class InteractionType
     LHH,
 };
 
+constexpr bool ComputeHaloForces = true;   //this is used for calculating stress tensor
+
 /** \brief Compute triplewise interactions within a single ParticleVector.
     \tparam Interaction The triplewise interaction kernel
 
@@ -112,22 +114,22 @@ __device__ void computeTriplewiseSelfInteractions(
                                 handler.readExtraData(srcP2, srcView, srcId2);
 
                                 const std::array<real3, 3> val = handler(dstP, srcP1, srcP2, interacting01, interacting12, interacting20);
-                                if (InteractType != InteractionType::HLL)
+                                if (InteractType != InteractionType::HLL || ComputeHaloForces)
                                     frc_ += val[0];
-                                if (InteractType != InteractionType::LHH) {
+                                if (InteractType != InteractionType::LHH || ComputeHaloForces) {
                                     force1 += val[1];
                                     atomicAdd(srcForces + srcId2, val[2]);
                                 }
                             }
                         }
-                        if (InteractType != InteractionType::LHH)
+                        if (InteractType != InteractionType::LHH || ComputeHaloForces)
                             atomicAdd(srcForces + srcId1, force1);
                     }
                 } //cellY2
             } //cellZ2
         } //cellY1
     } //cellZ1
-    if (InteractType != InteractionType::HLL)
+    if (InteractType != InteractionType::HLL || ComputeHaloForces)
         atomicAdd(dstView.forces + dstId, frc_);
 }
 

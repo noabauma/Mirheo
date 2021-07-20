@@ -279,7 +279,8 @@ private:
         const int nth = 128;
         if (np1 > 0 && np2 > 0)
             if (dynamic_cast<ObjectVector*>(pv1) == nullptr) // don't need forces for pure particle halo
-                CHOOSE_EXTERNAL(InteractionOutMode::NoOutput,   InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
+                //CHOOSE_EXTERNAL(InteractionOutMode::NoOutput,   InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
+                CHOOSE_EXTERNAL(InteractionOutMode::NeedOutput,   InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
             else
                 CHOOSE_EXTERNAL(InteractionOutMode::NeedOutput, InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
     }
