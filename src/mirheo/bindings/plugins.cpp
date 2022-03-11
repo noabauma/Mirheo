@@ -23,50 +23,6 @@ void exportPlugins(py::module& m)
         Base postprocess plugin class
     )");
 
-    m.def("__createCopyPV", &plugin_factory::createCopyPVPlugin,
-          "compute_task"_a, "state"_a, "name"_a, "pvTarget"_a, "pvSource"_a, R"(
-        This plugin will copy one PV into another PV
-
-        Args:
-            name: name of the plugin
-            pvTarget: :any:`ParticleVector` that will have the copied file
-            pvSource: ParticleVector which will be copied
-    )");
-    
-    m.def("__createAddPerParticleForce", &plugin_factory::createAddPerParticleForcePlugin,
-          "compute_task"_a, "state"_a, "name"_a, "pv"_a, "channel_name"_a, R"(
-        This plugin will add a specific constant force to specific particles of a specific PV every time-step.
-        It is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
-
-        Args:
-            name: name of the plugin
-            pv: :any:`ParticleVector` that we'll work with
-            channel_name: channel name of the extra force
-    )");
-
-    m.def("__createStressTensor", &plugin_factory::createStressTensorPlugin,
-        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "mask"_a, "path"_a, R"(
-        This plugin outputs the Stress tensor of a specified pv into a CSV file (with timesteps)
-
-        Args:
-            name: name of the plugin
-            pv: :any:`ParticleVector` that we'll work with
-            dump_every: dumps at every so timestep Stress tensor into csv file
-            mask: Which Stresstensors have to be dumped ex: mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy
-            path: at which path the file should be output
-    )");
-
-    m.def("__createTotalForceSaver", &plugin_factory::createTotalForceSaverPlugin,
-        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "path"_a, R"(
-        This plugin outputs the total force in one desired coordinate of a specified pv into a CSV file (with timesteps)
-
-        Args:
-            name: name of the plugin
-            pv: :any:`ParticleVector` that we'll work with
-            dump_every: dumps at every so timestep total force into csv file
-            path: at which path the file should be output
-    )");
-
     m.def("__createAddForce", &plugin_factory::createAddForcePlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "force"_a, R"(
         This plugin will add constant force :math:`\mathbf{F}_{extra}` to each particle of a specific PV every time-step.
@@ -128,6 +84,16 @@ void exportPlugins(py::module& m)
             increaseIfLower: whether to increase the temperature if it's lower than the target temperature
 
         (*) Exactly one of ``kBT`` and ``T`` must be set.
+    )");
+
+    m.def("__createCopyPV", &plugin_factory::createCopyPVPlugin,
+          "compute_task"_a, "state"_a, "name"_a, "pvTarget"_a, "pvSource"_a, R"(
+        This plugin will copy one PV into another PV
+
+        Args:
+            name: name of the plugin
+            pvTarget: :any:`ParticleVector` that will have the copied file
+            pvSource: ParticleVector which will be copied
     )");
 
     m.def("__createDensityControl", &plugin_factory::createDensityControlPlugin,
@@ -558,6 +524,28 @@ void exportPlugins(py::module& m)
             every: Report to standard output every that many time-steps.
     )");
 
+    m.def("__createStressTensor", &plugin_factory::createStressTensorPlugin,
+        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "mask"_a, "path"_a, R"(
+        This plugin outputs the stress tensor of a specified pv into a CSV file (with timesteps)
+
+        .. math::
+
+            P_{\alpha\beta}V = \sum_{i=1}^{N}m_i v_{i\alpha} v_{i\beta} + r_{i\alpha} f_{i\beta},
+
+        where :math:`V` is the volume of the domain, :math:`m_i` is the mass of the $i$-th particle, :math:`v_{i\alpha}` the component :math:`\alpha` of the velocity of the :math:`i`-th particle, 
+        :math:`r_{i\alpha}` the component :math:`\alpha` of the position of the :math:`i`-th particle 
+        and :math:`f_{i\beta}` the component :math:`\beta` of the force of the :math:`i`-th particle :math:`(\alpha,\beta = x,y,z)`.
+        This plugin calculates all 9 possible stress tensors: :math:`P_{xx},P_{xy},P_{xz},P_{yx},P_{yy},P_{yz},P_{zx},P_{zy},P_{zz}`
+        Note that the volume :math:`V` has to be manually divided to get the stress tensor.
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            dump_every: dumps at every so timestep Stress tensor into csv file
+            mask: Which Stresstensors have to be dumped ex: mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy
+            path: at which path the file should be output
+    )");
+
     m.def("__createTemperaturize", &plugin_factory::createTemperaturizePlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "kBT"_a, "keepVelocity"_a, R"(
         This plugin changes the velocity of each particles from a given :any:`ParticleVector`.
@@ -569,6 +557,17 @@ void exportPlugins(py::module& m)
             pv: the concerned :any:`ParticleVector`
             kBT: the target temperature
             keepVelocity: True for adding Maxwell distribution to the previous velocity; False to set the velocity to a Maxwell distribution.
+    )");
+
+    m.def("__createTotalForceSaver", &plugin_factory::createTotalForceSaverPlugin,
+        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "path"_a, R"(
+        This plugin outputs the total force in one desired coordinate of a specified pv into a CSV file (with timesteps)
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            dump_every: dumps at every so timestep total force into csv file
+            path: at which path the file should be output
     )");
 
     m.def("__createVacf", &plugin_factory::createVacfPlugin,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Test triplewise forces."""
+"""Test triplewise forces, test halo forces in triplewise & test sw3 working correctly"""
 
 import mirheo as mir
 import numpy
@@ -17,7 +17,7 @@ rank = comm.Get_rank()
 rc = 2.0
 lambda_ = 0.1234
 epsilon = 0.2234
-theta   = 0.3234     #normally 1.910633236
+theta   = 0.3234
 gamma   = 0.4234
 sigma   = 0.5234
 

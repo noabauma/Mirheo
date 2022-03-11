@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Test triplewise forces."""
+"""Test SW2 forces."""
 
 import mirheo as mir
 import numpy
@@ -16,7 +16,7 @@ rank = comm.Get_rank()
 #parameters
 rc = 2.0
 epsilon = 1.234
-A       = 1.234     #normally 1.910633236
+A       = 1.234
 B       = 1.234
 sigma   = 1.234
 

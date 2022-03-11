@@ -23,7 +23,7 @@ using ReductionType = totForce;
 } // namespace total_force_saver_plugin
 
 
-/** Compute the total force in the system
+/** Compute the total force in the x,y,z-direction in the system
     and send it to the TotalForceSaverDumper.
 */
 class TotalForceSaverPlugin : public SimulationPlugin
@@ -33,7 +33,6 @@ public:
         \param [in] state The global state of the simulation.
         \param [in] name The name of the plugin.
         \param [in] pvName The name of the ParticleVector to add the particles to.
-        \param [in] coordinate Which coordinate of the force has to be outputted.
         \param [in] dumpEvery Will compute and send the total force every this number of steps.
     */
     TotalForceSaverPlugin(const MirState *state, std::string name, std::string pvName, int dumpEvery);

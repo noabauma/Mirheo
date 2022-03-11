@@ -57,22 +57,6 @@ void exportParticleVectors(py::module& m)
             Returns:
                 A list of :math:`N \times 3` reals: 3 components of force for every of the N particles
         )")
-        //
-        .def("updateChannel", &ParticleVector::updateChannel, "channelName"_a, "values"_a, R"(
-            Args:
-                channelName: Name of the partivleVector Channel which will be overwritten by the new values
-                values: A list of :math:`N \times 3` reals: 3 components of coordinate for every of the N particles
-        )")
-        .def("scaleChannel", &ParticleVector::scaleChannel, "channelName"_a, "scale"_a, R"(
-            Args:
-                channelName: Name of the partivleVector Channel which will be scaled by the scale
-                scale: A float value which will be multiplied to the specific channel
-        )")
-        .def("additiveUpdateChannel", &ParticleVector::additiveUpdateChannel, "channelName"_a, "value"_a, R"(
-            Args:
-                channelName: Name of the partivleVector Channel which will be scaled by the scale
-                value: A float value which will be added/subtracted to already existing extraForces (if extraForces == 0 -> ignore)
-        )")
         .def("setCoordinates", &ParticleVector::setCoordinates_vector, "coordinates"_a, R"(
             Args:
                 coordinates: A list of :math:`N \times 3` reals: 3 components of coordinate for every of the N particles
@@ -84,6 +68,11 @@ void exportParticleVectors(py::module& m)
         .def("setForces",      &ParticleVector::setForces_vector, "forces"_a, R"(
             Args:
                 forces: A list of :math:`N \times 3` reals: 3 components of force for every of the N particles
+        )")
+        .def("updateChannel", &ParticleVector::updateChannel, "channelName"_a, "values"_a, R"(
+            Args:
+                channelName: Name of the partivleVector Channel which will be overwritten by the new values
+                values: A list of :math:`N \times 3` reals: 3 components of coordinate for every of the N particles
         )");
 
     py::handlers_class<Mesh> pymesh(m, "Mesh", R"(

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Test triplewise forces."""
+"""Test triplewise interactions with the dummy triplewise interaction class (which counts the amount of interactions)."""
 
 import mirheo as mir
 import numpy as np
