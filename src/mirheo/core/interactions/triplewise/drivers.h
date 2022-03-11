@@ -25,7 +25,7 @@ enum class InteractionType
     LHH,
 };
 
-constexpr bool ComputeHaloForces = true;   //this is used for calculating stress tensor
+constexpr bool ComputeHaloForces = false;   //this is used for calculating stress tensor
 
 /** \brief Compute triplewise interactions within a single ParticleVector.
     \tparam Interaction The triplewise interaction kernel

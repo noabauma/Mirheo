@@ -15,11 +15,11 @@ rank = comm.Get_rank()
 
 #parameters
 rc = 2.0
-lambda_ = 1.234
-epsilon = 1.234
-theta   = 1.234     #normally 1.910633236
-gamma   = 1.234
-sigma   = 1.234
+lambda_ = 0.1234
+epsilon = 0.2234
+theta   = 0.3234     #normally 1.910633236
+gamma   = 0.4234
+sigma   = 0.5234
 
 #Stillinger-Weber 3Body Potential
 def sw3_pot(r_i, r_j, r_k):
