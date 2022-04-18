@@ -1,7 +1,8 @@
+// Copyright 2020 ETH Zurich. All Rights Reserved.
+
 // Code: Noah Baumann Bachelor Thesis
-// 2Body SW potential
 // SW: Stillinger-Weber potiential
-// this code is inspired by "lj.h"
+// 2Body SW potential
 
 // Paper: "Water Modeled As an Intermediate Element between Carbon and Silicon 2009"
 // https://pubs.acs.org/doi/abs/10.1021/jp805227c
@@ -24,7 +25,7 @@ public:
     using ViewType     = PVview;     ///< Compatible view type
     using ParticleType = Particle;   ///< Compatible particle type
     using HandlerType  = PairwiseSW; ///< Corresponding handler
-    using ParamsType   = SWParams;   ///< Corresponding parameters type
+    using ParamsType   = SW2Params;  ///< Corresponding parameters type
 
     /// Constructor
     PairwiseSW(real rc, real epsilon, real sigma, real A, real B) :
@@ -55,7 +56,6 @@ public:
         const real r_rc = dr_ - rc_;
         const real exp = math::exp(sigma_ / r_rc);
         const real A_eps_exp = A_*epsilon_*exp;
-        //const real phi = (sigma_*(B_rs4 -1.0_r)*A_eps_exp)/(r_rc*r_rc*dr_) + (4.0_r*B_rs4*A_eps_exp)/dr2;
         const real phi = (sigma_*(B_rs4 - 1.0_r))/(r_rc*r_rc*dr_) + (4.0_r*B_rs4)/dr2;
 
         return A_eps_exp * phi * dr;
@@ -79,8 +79,8 @@ public:
 private:
     real epsilon_;
     real sigma_;
-    real A_;        //given from the paper 7.049556277
-    real B_;        //0.6022245584
+    real A_;
+    real B_;
 };
 
 } // namespace mirheo

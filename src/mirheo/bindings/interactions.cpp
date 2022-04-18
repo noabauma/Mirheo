@@ -203,6 +203,22 @@ void exportInteractions(py::module& m)
                     w_\rho(r) = \frac{21}{2\pi} \left( 1 - \frac{r}{r_c} \right)^4 \left( 1 + 4 \frac{r}{r_c} \right)
 
 
+        * **SW**:
+            Stillinger-Weber (SW) 2-Body & 3-Body interaction potential which takes into account the angle between the particles
+
+            .. math::
+
+                \varphi_2(r) = A\epsilon \Bigl[B\Bigl(\frac{\sigma}{r}\Bigr)^p - \Bigl(\frac{\sigma}{r}\Bigr)^q\Bigr]\exp\Bigl(\frac{\sigma}{r-r_c}\Bigr)
+
+            .. math::
+
+                \varphi_3(\vec{r}_i,\vec{r}_j,\vec{r}_k)
+                    = h_{jik} + h_{ijk} + h_{ikj} \\
+                    = h(r_{ij}, r_{ki}, \theta_{jik}) + h(r_{ij}, r_{jk}, \theta_{ijk}) + h(r_{ki}, r_{jk}, \theta_{ikj}),
+                
+
+                h(r,s,\theta) = \lambda\epsilon[\cos\theta - \cos\theta_0]^2\exp\Bigl(\frac{\gamma\sigma}{r-r_c}\Bigr)\exp\Bigl(\frac{\gamma\sigma}{s-r_c}\Bigr)
+        
         .. [Groot1997] Groot, R. D., & Warren, P. B. (1997).
             Dissipative particle dynamics: Bridging the gap between atomistic and mesoscopic simulations.
             J. Chem. Phys., 107(11), 4423-4435. `doi <https://doi.org/10.1063/1.474784>`

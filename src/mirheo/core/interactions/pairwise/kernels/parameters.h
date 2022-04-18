@@ -39,7 +39,7 @@ class PairwiseSDPD;
 // corresponding parameters, visible by users
 
 /// Dissipative Particle Dynamics  parameters
-struct SWParams
+struct SW2Params
 {
     using KernelType = PairwiseSW; ///< the corresponding kernel
     real epsilon;   ///< force coefficient
@@ -47,7 +47,7 @@ struct SWParams
     real A;         ///< SW Parameter
     real B;         ///< SW Parameter
 };
-MIRHEO_MEMBER_VARS(SWParams, epsilon, sigma, A, B);
+MIRHEO_MEMBER_VARS(SW2Params, epsilon, sigma, A, B);
 
 struct DPDParams
 {
@@ -191,7 +191,7 @@ struct SDPDParams
 MIRHEO_MEMBER_VARS(SDPDParams, viscosity, kBT, varEOSParams, varDensityKernelParams);
 
 /// variant of all possible pairwise interactions
-using VarPairwiseParams = mpark::variant<SWParams,
+using VarPairwiseParams = mpark::variant<SW2Params,
                                          DPDParams,
                                          LJParams,
                                          RepulsiveLJParams,

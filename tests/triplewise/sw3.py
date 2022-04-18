@@ -105,7 +105,7 @@ def main():
     ic = mir.InitialConditions.FromArray(pos=particles, vel=vel)
     u.registerParticleVector(pv, ic)
 
-    sw3 = mir.Interactions.Triplewise('interaction', rc=rc, kind='SW3', lambda_=lambda_, epsilon=epsilon, theta=theta, gamma=gamma, sigma=sigma)
+    sw3 = mir.Interactions.Triplewise('interaction', rc=rc, kind='SW', lambda_=lambda_, epsilon=epsilon, theta=theta, gamma=gamma, sigma=sigma)
     u.registerInteraction(sw3)
     u.setInteraction(sw3, pv, pv, pv)
 
@@ -127,7 +127,7 @@ def main():
         brute = brute_force(particles)
         try:    
             #if necessary sort them
-            numpy.testing.assert_allclose(np.sort(mirheo, axis=0), np.sort(brute, axis=0), rtol=1e-10)
+            numpy.testing.assert_allclose(np.sort(mirheo, axis=0), np.sort(brute, axis=0), rtol=1e-5) #1e-10 for double precision
         except:
             print("particles:\n", particles)
             print("mirheo positions:\n", f['position'][()])

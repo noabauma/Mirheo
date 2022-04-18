@@ -107,7 +107,7 @@ def main():
         brute = brute_force(particles)
         try:    
             #if necessary sort them
-            numpy.testing.assert_allclose(np.sort(mirheo, axis=0), np.sort(brute, axis=0), rtol=1e-10)
+            numpy.testing.assert_allclose(np.sort(mirheo, axis=0), np.sort(brute, axis=0), rtol=1e-4) #1e-10 for double precision
         except:
             print("particles:\n", particles)
             print("mirheo positions:\n", f['position'][()])

@@ -1,4 +1,9 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
+
+// Code: Noah Baumann Bachelor Thesis
+// SW: Stillinger-Weber potiential
+// 3Body SW potential
+
 #pragma once
 
 //maybe fix

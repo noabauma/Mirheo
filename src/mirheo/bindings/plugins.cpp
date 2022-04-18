@@ -559,17 +559,6 @@ void exportPlugins(py::module& m)
             keepVelocity: True for adding Maxwell distribution to the previous velocity; False to set the velocity to a Maxwell distribution.
     )");
 
-    m.def("__createTotalForceSaver", &plugin_factory::createTotalForceSaverPlugin,
-        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "path"_a, R"(
-        This plugin outputs the total force in one desired coordinate of a specified pv into a CSV file (with timesteps)
-
-        Args:
-            name: name of the plugin
-            pv: :any:`ParticleVector` that we'll work with
-            dump_every: dumps at every so timestep total force into csv file
-            path: at which path the file should be output
-    )");
-
     m.def("__createVacf", &plugin_factory::createVacfPlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "start_time"_a, "end_time"_a, "dump_every"_a, "path"_a, R"(
         This plugin computes the mean velocity autocorrelation over time from a given :any:`ParticleVector`.

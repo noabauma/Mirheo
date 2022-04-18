@@ -10,9 +10,6 @@ set(sources_cpp
   )
 
 set(sources_cu
-  save_total_force.cu
-  stress_tensor.cu
-  add_perparticleforce.cu
   add_force.cu
   add_torque.cu
   anchor_particle.cu
@@ -39,6 +36,7 @@ set(sources_cu
   pin_rod_extremity.cu
   rdf.cu
   stats.cu
+  stress_tensor.cu
   temperaturize.cu
   vacf.cu
   velocity_control.cu

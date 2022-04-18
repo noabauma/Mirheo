@@ -145,9 +145,9 @@ loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObjec
 {
     static_assert(std::is_same<
             VarPairwiseParams,
-            mpark::variant<SWParams, DPDParams, LJParams, RepulsiveLJParams,              
+            mpark::variant<SW2Params, DPDParams, LJParams, RepulsiveLJParams,              
                            MDPDParams, DensityParams, SDPDParams>>::value,
-            "Load interactions must be updated if th VairPairwiseParams is changed.");  //"SWParams" in it?
+            "Load interactions must be updated if th VairPairwiseParams is changed.");  //"SW2Params" in it?
 
     const std::string& typeName = config["__type"].getString();
     PairwiseFactoryVisitor visitor{state, loader, config, typeName, nullptr};
@@ -157,9 +157,9 @@ loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObjec
     // `variantForeach`, and for those that don't we simply call
     // `tryLoadPairwise` directly.
 
-    // SWParams.
-    tryLoadPairwiseStress  <SWParams::KernelType>(visitor);
-    tryLoadPairwiseNoStress<SWParams::KernelType>(visitor);
+    // SW2Params.
+    tryLoadPairwiseStress  <SW2Params::KernelType>(visitor);
+    tryLoadPairwiseNoStress<SW2Params::KernelType>(visitor);
 
     // DPDParams.
     tryLoadPairwiseStress  <DPDParams::KernelType>(visitor);

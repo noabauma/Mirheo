@@ -1,7 +1,6 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #include "factory.h"
 
-#include "add_perparticleforce.h"
 #include "add_force.h"
 #include "add_torque.h"
 #include "anchor_particle.h"
@@ -33,6 +32,7 @@
 #include "pin_rod_extremity.h"
 #include "rdf.h"
 #include "stats.h"
+#include "stress_tensor.h"
 #include "temperaturize.h"
 #include "vacf.h"
 #include "velocity_control.h"
@@ -40,8 +40,6 @@
 #include "virial_pressure.h"
 #include "wall_force_collector.h"
 #include "wall_repulsion.h"
-#include "stress_tensor.h"
-#include "save_total_force.h"
 
 namespace mirheo
 {
@@ -55,18 +53,6 @@ static std::vector<std::string> extractPVNames(const std::vector<ParticleVector*
     for (auto &pv : pvs)
         pvNames.push_back(pv->getName());
     return pvNames;
-}
-
-PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource)
-{
-    auto simPl = computeTask ? std::make_shared<CopyPVPlugin> (state, name, pvTarget->getName(), pvSource->getName()) : nullptr;
-    return { simPl, nullptr };
-}
-
-PairPlugin createAddPerParticleForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, std::string channel_name)
-{
-    auto simPl = computeTask ? std::make_shared<AddPerParticleForcePlugin> (state, name, pv->getName(), channel_name) : nullptr;
-    return { simPl, nullptr };
 }
 
 PairPlugin createAddForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force)
@@ -117,6 +103,12 @@ PairPlugin createBerendsenThermostatPlugin(
                 state, name, extractPVNames(pvs), kBT, tau, increaseIfLower) : nullptr,
         nullptr
     };
+}
+
+PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource)
+{
+    auto simPl = computeTask ? std::make_shared<CopyPVPlugin> (state, name, pvTarget->getName(), pvSource->getName()) : nullptr;
+    return { simPl, nullptr };
 }
 
 PairPlugin createDensityControlPlugin(bool computeTask, const MirState *state, std::string name, std::string fname, std::vector<ParticleVector*> pvs,
@@ -390,14 +382,6 @@ PairPlugin createStatsPlugin(bool computeTask, const MirState *state, std::strin
     auto simPl  = computeTask ? std::make_shared<SimulationStats> (state, name, every) : nullptr;
     auto postPl = computeTask ? nullptr : std::make_shared<PostprocessStats> (name, filename);
 
-    return { simPl, postPl };
-}
-
-PairPlugin createTotalForceSaverPlugin(bool computeTask, const MirState *state,  std::string name, ParticleVector *pv, 
-                                       int dumpEvery, std::string path)
-{
-    auto simPl  = computeTask ? std::make_shared<TotalForceSaverPlugin> (state, name, pv->getName(), dumpEvery) : nullptr;
-    auto postPl = computeTask ? nullptr : std::make_shared<TotalForceSaverDumper> (name, path);
     return { simPl, postPl };
 }
 

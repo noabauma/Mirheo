@@ -31,7 +31,7 @@ def brute_force(sqr_dist, domain, rc, epsilon):
 
     # Preprocess a 0-1 matrix within_cutoff[i, j] denoting whether or not
     # particles i and j are within the cutoff.
-    within_cutoff = (sqr_dist <= rc * rc).astype(np.int)
+    within_cutoff = (sqr_dist <= rc * rc).astype(int)
 
     result = np.zeros((N, 3))
     for i in range(N):

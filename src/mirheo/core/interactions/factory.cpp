@@ -232,7 +232,7 @@ interaction_factory::createPairwiseInteraction(const MirState *state, std::strin
     else if (type == "SDPD")
         varParams = factory_helper::readSDPDParams(desc);
     else if (type == "SW")
-        varParams = factory_helper::readSWParams(desc);
+        varParams = factory_helper::readSW2Params(desc);
     else if (type == "LJ")
         varParams = factory_helper::readLJParams(desc);
     else if (type == "RepulsiveLJ")
@@ -254,7 +254,7 @@ interaction_factory::createTriplewiseInteraction(const MirState *state, std::str
     ParametersWrap desc {parameters};
     VarTriplewiseParams varParams;
 
-    if(type == "SW3")
+    if(type == "SW")
         varParams = factory_helper::readSW3Params(desc);
     else if (type == "Dummy")
         varParams = factory_helper::readDummyParams(desc);
