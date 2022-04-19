@@ -279,6 +279,8 @@ private:
         const int nth = 128;
         if (np1 > 0 && np2 > 0)
             if (dynamic_cast<ObjectVector*>(pv1) == nullptr) // don't need forces for pure particle halo
+                //TODO: we want forces from the halo particles IF the StressTensorPlugin is used.
+                //TODO: optimally we would need to add a boolean if the StressTensorPlugin is used.
                 //CHOOSE_EXTERNAL(InteractionOutMode::NoOutput,   InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
                 CHOOSE_EXTERNAL(InteractionOutMode::NeedOutput,   InteractionOutMode::NeedOutput, InteractionFetchMode::Dilute, pair_.handler() );
             else

@@ -25,6 +25,7 @@ enum class InteractionType
     LHH,
 };
 
+//TODO: should be given as a boolean if StressTensorPlugin is used!
 constexpr bool ComputeHaloForces = false;   //this is used for calculating stress tensor
 
 /** \brief Compute triplewise interactions within a single ParticleVector.
