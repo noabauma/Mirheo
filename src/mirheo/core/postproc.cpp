@@ -36,11 +36,28 @@ void Postprocess::registerPlugin(std::shared_ptr<PostprocessPlugin> plugin, int 
     plugins_.push_back( std::move(plugin) );
 }
 
+void Postprocess::deregisterPlugin(PostprocessPlugin *plugin)
+{
+    for (auto it = plugins_.begin(); it != plugins_.end(); ++it) {
+        if (it->get() == plugin) {
+            info("Plugin deregistered: %s", plugin->getCName());
+            plugins_.erase(it);
+            return;
+        }
+    }
+
+    die("PostprocessPlugin %s not found", plugin->getCName());
+}
+
 void Postprocess::init()
 {
     for (auto& pl : plugins_)
     {
         debug("Setup and handshake of %s", pl->getCName());
+        // Both setup and handshake will be invoked each time run() is invoked.
+        // The plugin should support multiple runs if possible. Otherwise, the
+        // plugin should throw an exception when the run is invoked for the
+        // second time.
         pl->setup(comm_, interComm_);
         pl->handshake();
     }

@@ -4,6 +4,7 @@
 #include "pairwise.h"
 #include "pairwise_with_stress.h"
 
+#include "kernels/sw.h"
 #include "kernels/density.h"
 #include "kernels/density_kernels.h"
 #include "kernels/dpd.h"
@@ -139,15 +140,14 @@ static void tryLoadPairwiseNoStress(PairwiseFactoryVisitor &visitor)
     }
 }
 
-
 std::shared_ptr<BasePairwiseInteraction>
 loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObject& config)
 {
     static_assert(std::is_same<
             VarPairwiseParams,
-            mpark::variant<DPDParams, LJParams, RepulsiveLJParams,
+            mpark::variant<SW2Params, DPDParams, LJParams, RepulsiveLJParams,              
                            MDPDParams, DensityParams, SDPDParams>>::value,
-            "Load interactions must be updated if th VairPairwiseParams is changed.");
+            "Load interactions must be updated if th VairPairwiseParams is changed.");  //"SW2Params" in it?
 
     const std::string& typeName = config["__type"].getString();
     PairwiseFactoryVisitor visitor{state, loader, config, typeName, nullptr};
@@ -156,6 +156,10 @@ loadInteractionPairwise(const MirState *state, Loader& loader, const ConfigObjec
     // For interactions that branch into more template combinations, we use
     // `variantForeach`, and for those that don't we simply call
     // `tryLoadPairwise` directly.
+
+    // SW2Params.
+    tryLoadPairwiseStress  <SW2Params::KernelType>(visitor);
+    tryLoadPairwiseNoStress<SW2Params::KernelType>(visitor);
 
     // DPDParams.
     tryLoadPairwiseStress  <DPDParams::KernelType>(visitor);

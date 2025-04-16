@@ -18,7 +18,7 @@ dt = 0.001
 ranks  = (1, 1, 1)
 domain = (12, 8, 10)
 
-u = mir.Mirheo(ranks, domain, dt, debug_level=3, log_filename='log', no_splash=True)
+u = mir.Mirheo(ranks, domain, debug_level=3, log_filename='log', no_splash=True)
 
 mesh_rbc = mir.ParticleVectors.MembraneMesh("data/rbc.off", "data/sphere.off")
 pv_rbc   = mir.ParticleVectors.MembraneVector("rbc", mass=1.0, mesh=mesh_rbc)
@@ -37,7 +37,6 @@ prm_rbc = {
     "b1"     : args.b1,
     "b2"     : args.b2,
     "gammaC" : 0.0,
-    "gammaT" : 0.0,
     "kBT"    : 0.0,
     "kb"     : 0.0,
     "theta"  : 0.0
@@ -58,7 +57,7 @@ u.registerPlugins(mir.Plugins.createDumpParticlesWithMesh("meshdump",
                                                           ["forces"],
                                                           "h5/rbc-"))
 
-u.run(2)
+u.run(2, dt=dt)
 
 # nTEST: membrane.shear.lim.ka.stressFree
 # cd membrane

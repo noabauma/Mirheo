@@ -23,11 +23,10 @@ void exportPlugins(py::module& m)
         Base postprocess plugin class
     )");
 
-
     m.def("__createAddForce", &plugin_factory::createAddForcePlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "force"_a, R"(
         This plugin will add constant force :math:`\mathbf{F}_{extra}` to each particle of a specific PV every time-step.
-        Is is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
+        It is advised to only use it with rigid objects, since Velocity-Verlet integrator with constant pressure can do the same without any performance penalty.
 
         Args:
             name: name of the plugin
@@ -85,6 +84,16 @@ void exportPlugins(py::module& m)
             increaseIfLower: whether to increase the temperature if it's lower than the target temperature
 
         (*) Exactly one of ``kBT`` and ``T`` must be set.
+    )");
+
+    m.def("__createCopyPV", &plugin_factory::createCopyPVPlugin,
+          "compute_task"_a, "state"_a, "name"_a, "pvTarget"_a, "pvSource"_a, R"(
+        This plugin will copy one PV into another PV
+
+        Args:
+            name: name of the plugin
+            pvTarget: :any:`ParticleVector` that will have the copied file
+            pvSource: ParticleVector which will be copied
     )");
 
     m.def("__createDensityControl", &plugin_factory::createDensityControlPlugin,
@@ -381,6 +390,19 @@ void exportPlugins(py::module& m)
             path: The folder name in which the file will be dumped.
     )");
 
+    m.def("__createParticleChannelAverager", &plugin_factory::createParticleChannelAveragerPlugin,
+          "compute_task"_a, "state"_a, "name"_a, "pv"_a, "channelName"_a, "averageName"_a, "updateEvery"_a, R"(
+        This plugin averages a channel (per particle data) inside the given particle vector and saves it to a new channel.
+        This new channel (containing the averaged data) is updated every fixed number of time steps.
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            channelName: The name of the source channel.
+            averageName: The name of the average channel.
+            updateEvery: reinitialize the averages every this number of steps.
+    )");
+
     m.def("__createParticleChannelSaver", &plugin_factory::createParticleChannelSaverPlugin,
           "compute_task"_a, "state"_a, "name"_a, "pv"_a, "channelName"_a, "savedName"_a, R"(
         This plugin creates an extra channel per particle inside the given particle vector with a given name.
@@ -500,6 +522,28 @@ void exportPlugins(py::module& m)
             name: Name of the plugin.
             filename: The statistics are saved in this csv file. The name should either end with `.csv` or have no extension, in which case `.csv` is added.
             every: Report to standard output every that many time-steps.
+    )");
+
+    m.def("__createStressTensor", &plugin_factory::createStressTensorPlugin,
+        "compute_task"_a, "state"_a, "name"_a, "pv"_a, "dump_every"_a, "mask"_a, "path"_a, R"(
+        This plugin outputs the stress tensor of a specified pv into a CSV file (with timesteps)
+
+        .. math::
+
+            P_{\alpha\beta}V = \sum_{i=1}^{N}m_i v_{i\alpha} v_{i\beta} + r_{i\alpha} f_{i\beta},
+
+        where :math:`V` is the volume of the domain, :math:`m_i` is the mass of the $i$-th particle, :math:`v_{i\alpha}` the component :math:`\alpha` of the velocity of the :math:`i`-th particle, 
+        :math:`r_{i\alpha}` the component :math:`\alpha` of the position of the :math:`i`-th particle 
+        and :math:`f_{i\beta}` the component :math:`\beta` of the force of the :math:`i`-th particle :math:`(\alpha,\beta = x,y,z)`.
+        This plugin calculates all 9 possible stress tensors: :math:`P_{xx},P_{xy},P_{xz},P_{yx},P_{yy},P_{yz},P_{zx},P_{zy},P_{zz}`
+        Note that the volume :math:`V` has to be manually divided to get the stress tensor.
+
+        Args:
+            name: name of the plugin
+            pv: :any:`ParticleVector` that we'll work with
+            dump_every: dumps at every so timestep Stress tensor into csv file
+            mask: Which Stresstensors have to be dumped ex: mask = 011101010 -> Pxy,Pxz,Pyx,Pyz,Pzy
+            path: at which path the file should be output
     )");
 
     m.def("__createTemperaturize", &plugin_factory::createTemperaturizePlugin,

@@ -22,6 +22,7 @@ namespace plugin_factory
 using PairPlugin = std::pair<std::shared_ptr<SimulationPlugin>,
                              std::shared_ptr<PostprocessPlugin>>;
 
+PairPlugin createAddSpecificForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force); //TODO: is this form noah? delete?
 
 PairPlugin createAddForcePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real3 force);
 
@@ -34,6 +35,8 @@ PairPlugin createAnchorParticlesPlugin(bool computeTask, const MirState *state, 
 
 PairPlugin createBerendsenThermostatPlugin(bool computeTask, const MirState *state, std::string name,
                                            const std::vector<ParticleVector *> &pv, real tau, real T, real kBT, bool increaseIfLower);
+
+PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource);
 
 PairPlugin createDensityControlPlugin(bool computeTask, const MirState *state, std::string name, std::string fname, std::vector<ParticleVector*> pvs,
                                       real targetDensity, std::function<real(real3)> region, real3 resolution,
@@ -88,6 +91,9 @@ PairPlugin createMembraneExtraForcePlugin(bool computeTask, const MirState *stat
 PairPlugin createMsdPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
                            MirState::TimeType startTime, MirState::TimeType endTime, int dumpEvery, std::string path);
 
+PairPlugin createParticleChannelAveragerPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
+                                               std::string channelName, std::string averageName, real updateEvery);
+
 PairPlugin createParticleChannelSaverPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
                                             std::string channelName, std::string savedName);
 
@@ -115,6 +121,8 @@ PairPlugin createVelocityControlPlugin(bool computeTask, const MirState *state, 
 PairPlugin createRdfPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, real maxDist, int nbins, std::string basename, int every);
 
 PairPlugin createStatsPlugin(bool computeTask, const MirState *state, std::string name, std::string filename, int every);
+
+PairPlugin createStressTensorPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv, int dumpEvery, std::string mask, std::string path);
 
 PairPlugin createTemperaturizePlugin(bool computeTask, const MirState *state, std::string name, ParticleVector* pv, real kBT, bool keepVelocity);
 

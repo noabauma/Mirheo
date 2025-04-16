@@ -15,6 +15,8 @@ class Interaction;
 class BaseMembraneInteraction;
 class BaseRodInteraction;
 class BasePairwiseInteraction;
+class BaseTriplewiseInteraction;
+class ObjectBindingInteraction;
 class ObjectRodBindingInteraction;
 
 namespace interaction_factory
@@ -25,6 +27,8 @@ using MapParams = ParametersWrap::MapParams;
 std::shared_ptr<BasePairwiseInteraction>
 createPairwiseInteraction(const MirState *state, std::string name, real rc, const std::string type, const MapParams& parameters);
 
+std::shared_ptr<BaseTriplewiseInteraction>
+createTriplewiseInteraction(const MirState *state, std::string name, real rc, const std::string& type, const MapParams& parameters);
 
 std::shared_ptr<BaseMembraneInteraction>
 createInteractionMembrane(const MirState *state, std::string name,
@@ -35,6 +39,10 @@ createInteractionMembrane(const MirState *state, std::string name,
 std::shared_ptr<BaseRodInteraction>
 createInteractionRod(const MirState *state, std::string name, std::string stateUpdate,
                      bool saveEnergies, const MapParams& parameters);
+
+std::shared_ptr<ObjectBindingInteraction>
+createInteractionObjBinding(const MirState *state, std::string name,
+                            real kBound, std::vector<int2> pairs);
 
 std::shared_ptr<ObjectRodBindingInteraction>
 createInteractionObjRodBinding(const MirState *state, std::string name,

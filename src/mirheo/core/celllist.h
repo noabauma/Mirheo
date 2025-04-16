@@ -135,12 +135,12 @@ public:
     real rc;    ///< cutoff radius
     real3 h;    ///< dimensions of the cells along each direction
 
-    int *cellSizes;  ///< number of particles contained in each cell
-    int *cellStarts; ///< exclusive prefix sum of cellSizes
+    int *cellSizes {nullptr};  ///< number of particles contained in each cell
+    int *cellStarts {nullptr}; ///< exclusive prefix sum of cellSizes
 
     /// used to reorder particles when building the cell lists:
     /// \c order[pid] is the destination index of the particle with index \c pid before reordering
-    int *order;
+    int *order {nullptr};
 
 private:
     real3 invh_; ///< 1 / h
@@ -159,18 +159,17 @@ class CellList : public CellListInfo
 {
 public:
     /** Construct a CellList object
+
+        If padding of K cells is needed (e.g. for halo cells), extend the
+        localDomainSize by 2*K*rc.
+
         \param [in] pv The ParticleVector to attach.
         \param [in] rc The maximum cut-off radius that can be used with that cell list.
         \param [in] localDomainSize The size of the local subdomain
+        \param [in] locality Locality of particles to operate on.
      */
-    CellList(ParticleVector *pv, real rc, real3 localDomainSize);
-
-    /** Construct a CellList object
-        \param [in] pv The ParticleVector to attach.
-        \param [in] resolution The number of cells along each dimension
-        \param [in] localDomainSize The size of the local subdomain
-     */
-    CellList(ParticleVector *pv, int3 resolution, real3 localDomainSize);
+    CellList(ParticleVector *pv, real rc, real3 localDomainSize,
+             ParticleVectorLocality locality = ParticleVectorLocality::Local);
 
     virtual ~CellList();
 
@@ -188,6 +187,12 @@ public:
         \param [in] stream Execution stream
      */
     virtual void accumulateChannels(const std::vector<std::string>& channelNames, cudaStream_t stream);
+
+    /** \brief Same as `accumulateChannels`, but += is replaced with atomicAdd.
+        \param [in] channelNames List that contains the names of all the channels to accumulate
+        \param [in] stream Execution stream
+     */
+    virtual void accumulateChannelsAtomic(const std::vector<std::string>& channelNames, cudaStream_t stream);
 
     /** \brief Copy the channels from the attached ParticleVector to the cell-lists data.
         \param [in] channelNames List that contains the names of all the channels to copy
@@ -248,6 +253,9 @@ protected:
     /// see accumulateChannels(); for one channel.
     void _accumulateExtraData(const std::string& channelName, cudaStream_t stream);
 
+    /// see accumulateChannelsAtomic(); for one channel.
+    void _accumulateExtraDataAtomic(const std::string& channelName, cudaStream_t stream);
+
     /** reorder a given channel according to the internal map
         \param [in] channelName The name of the channel to reorder
         \param [in,out] channelDesc the channel data
@@ -274,6 +282,7 @@ protected:
     LocalParticleVector *localPV_; ///< will point to particlesDataContainer or pv->local() if Primary
 
     ParticleVector *pv_; ///< The attached ParticleVector
+    LocalParticleVector *srcLPV_;  ///< pv_'s LocalParticleVector to operate on
 };
 
 /** \brief Contains the cell-list map for a given ParticleVector.
@@ -292,13 +301,6 @@ public:
         \param [in] localDomainSize The size of the local subdomain
      */
     PrimaryCellList(ParticleVector *pv, real rc, real3 localDomainSize);
-
-    /** Construct a PrimaryCellList object
-        \param [in] pv The ParticleVector to attach.
-        \param [in] resolution The number of cells along each dimension
-        \param [in] localDomainSize The size of the local subdomain
-    */
-    PrimaryCellList(ParticleVector *pv, int3 resolution, real3 localDomainSize);
 
     ~PrimaryCellList();
 

@@ -16,6 +16,7 @@ set(sources_cu
   average_flow.cu
   average_relative_flow.cu
   berendsen_thermostat.cu
+  copy_pv.cu
   density_control.cu
   displacement.cu
   dump_obj_stats.cu
@@ -28,12 +29,14 @@ set(sources_cu
   membrane_extra_force.cu
   msd.cu
   outlet.cu
+  particle_channel_averager.cu
   particle_checker.cu
   particle_drag.cu
   pin_object.cu
   pin_rod_extremity.cu
   rdf.cu
   stats.cu
+  stress_tensor.cu
   temperaturize.cu
   vacf.cu
   velocity_control.cu

@@ -3,10 +3,13 @@
 
 #include "membrane/base_membrane.h"
 #include "membrane/factory.h"
+#include "obj_binding.h"
 #include "obj_rod_binding.h"
 #include "pairwise/base_pairwise.h"
 #include "pairwise/factory.h"
 #include "pairwise/factory_helper.h"
+#include "triplewise/factory.h"
+#include "triplewise/factory_helper.h"
 #include "rod/base_rod.h"
 #include "rod/factory.h"
 
@@ -27,10 +30,7 @@ static CommonMembraneParameters readCommonParameters(ParametersWrap& desc)
     p.kv = desc.read<real>("kv_tot");
 
     p.gammaC = desc.read<real>("gammaC");
-    p.gammaT = desc.read<real>("gammaT");
     p.kBT    = desc.read<real>("kBT");
-
-    p.fluctuationForces = (p.kBT > 1e-6_r);
 
     return p;
 }
@@ -231,6 +231,8 @@ interaction_factory::createPairwiseInteraction(const MirState *state, std::strin
         varParams = factory_helper::readMDPDParams(desc);
     else if (type == "SDPD")
         varParams = factory_helper::readSDPDParams(desc);
+    else if (type == "SW")
+        varParams = factory_helper::readSW2Params(desc);
     else if (type == "LJ")
         varParams = factory_helper::readLJParams(desc);
     else if (type == "RepulsiveLJ")
@@ -246,11 +248,36 @@ interaction_factory::createPairwiseInteraction(const MirState *state, std::strin
     return createInteractionPairwise(state, name, rc, varParams, varStressParams);
 }
 
+std::shared_ptr<BaseTriplewiseInteraction>
+interaction_factory::createTriplewiseInteraction(const MirState *state, std::string name, real rc, const std::string& type, const MapParams& parameters)
+{
+    ParametersWrap desc {parameters};
+    VarTriplewiseParams varParams;
+
+    if(type == "SW")
+        varParams = factory_helper::readSW3Params(desc);
+    else if (type == "Dummy")
+        varParams = factory_helper::readDummyParams(desc);
+    else
+        die("Unrecognized triplewise interaction type '%s'", type.c_str());
+
+    desc.checkAllRead();
+    return createInteractionTriplewise(state, std::move(name), rc, varParams);
+}
+
+std::shared_ptr<ObjectBindingInteraction>
+interaction_factory::createInteractionObjBinding(const MirState *state, std::string name,
+                                                 real kBound, std::vector<int2> pairs)
+{
+    return std::make_shared<ObjectBindingInteraction>(state, std::move(name), kBound, std::move(pairs));
+}
+
+
 std::shared_ptr<ObjectRodBindingInteraction>
 interaction_factory::createInteractionObjRodBinding(const MirState *state, std::string name,
                                                    real torque, real3 relAnchor, real kBound)
 {
-    return std::make_shared<ObjectRodBindingInteraction>(state, name, torque, relAnchor, kBound);
+    return std::make_shared<ObjectRodBindingInteraction>(state, std::move(name), torque, relAnchor, kBound);
 }
 
 static bool startsWith(const std::string &text, const char *tmp)

@@ -47,9 +47,10 @@ public:
 
     ~PairwiseInteractionWithStress() = default;
 
-    void setPrerequisites(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2) override
+    void setPrerequisites(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
+                          CellList *cl1, CellList *cl2, CellList *cl3) override
     {
-        interactionWithoutStress_.setPrerequisites(pv1, pv2, cl1, cl2);
+        interactionWithoutStress_.setPrerequisites(pv1, pv2, pv3, cl1, cl2, cl3);
 
         pv1->requireDataPerParticle <Stress> (channel_names::stresses, DataManager::PersistenceMode::None);
         pv2->requireDataPerParticle <Stress> (channel_names::stresses, DataManager::PersistenceMode::None);
@@ -58,7 +59,8 @@ public:
         cl2->requireExtraDataPerParticle <Stress> (channel_names::stresses);
     }
 
-    void local(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2, cudaStream_t stream) override
+    void local(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
+               CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream) override
     {
         const real t = getState()->currentTime;
 
@@ -66,16 +68,17 @@ public:
         {
             debug("Executing interaction '%s' with stress", getCName());
 
-            interactionWithStress_.local(pv1, pv2, cl1, cl2, stream);
+            interactionWithStress_.local(pv1, pv2, pv3, cl1, cl2, cl3, stream);
             lastStressTime_ = t;
         }
         else
         {
-            interactionWithoutStress_.local(pv1, pv2, cl1, cl2, stream);
+            interactionWithoutStress_.local(pv1, pv2, pv3, cl1, cl2, cl3, stream);
         }
     }
 
-    void halo(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2, cudaStream_t stream) override
+    void halo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
+              CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream) override
     {
         const real t = getState()->currentTime;
 
@@ -83,19 +86,13 @@ public:
         {
             debug("Executing interaction '%s' with stress", getCName());
 
-            interactionWithStress_.halo(pv1, pv2, cl1, cl2, stream);
+            interactionWithStress_.halo(pv1, pv2, pv3, cl1, cl2, cl3, stream);
             lastStressTime_ = t;
         }
         else
         {
-            interactionWithoutStress_.halo(pv1, pv2, cl1, cl2, stream);
+            interactionWithoutStress_.halo(pv1, pv2, pv3, cl1, cl2, cl3, stream);
         }
-    }
-
-    void setSpecificPair(const std::string& pv1name, const std::string& pv2name, const ParametersWrap::MapParams& mapParams) override
-    {
-        interactionWithoutStress_.setSpecificPair(pv1name, pv2name, mapParams);
-        interactionWithStress_   .setSpecificPair(pv1name, pv2name, mapParams);
     }
 
     std::vector<InteractionChannel> getInputChannels() const override

@@ -70,7 +70,7 @@ With all the prerequisites installed, you can take the following steps to run Mi
 
          .. code-block:: console
 
-            $ cmake -DCUDA_ARCH_NAME=6.0 ../
+            $ cmake -DMIR_CUDA_ARCH_NAME=6.0 ../
 
          Note that in case you don't specify any capability, Mirheo will be compiled for all supported architectures, which increases
          compilation time and slightly increases application startup. Performance, however, should not be affected.
@@ -103,10 +103,10 @@ Compile Options
 
 Additional compile options are provided through ``cmake``:
 
-* ``MEMBRANE_DOUBLE:BOOL=OFF``: Computes membrane forces (see :any:`MembraneForces`) in double precision if set to ``ON``; default: single precision
-* ``ROD_DOUBLE:BOOL=OFF``:  Computes rod forces (see :any:`RodForces`) in double precision if set to ``ON``; default: single precision
-* ``DOUBLE_PRECISION:BOOL=OFF``:  Use double precision everywhere if set to ``ON`` (including membrane forces and rod forces); default: single precision
-* ``USE_NVTX:BOOL=OFF``: Add NVIDIA Tools Extension (NVTX) trace support for more profiling informations if set to ``ON``; default: no NVTX
+* ``MIR_MEMBRANE_DOUBLE:BOOL=OFF``: Computes membrane forces (see :any:`MembraneForces`) in double precision if set to ``ON``; default: single precision
+* ``MIR_ROD_DOUBLE:BOOL=OFF``:  Computes rod forces (see :any:`RodForces`) in double precision if set to ``ON``; default: single precision
+* ``MIR_DOUBLE_PRECISION:BOOL=OFF``:  Use double precision everywhere if set to ``ON`` (including membrane forces and rod forces); default: single precision
+* ``MIR_USE_NVTX:BOOL=OFF``: Add NVIDIA Tools Extension (NVTX) trace support for more profiling informations if set to ``ON``; default: no NVTX
 
 .. note::
 
@@ -114,13 +114,13 @@ Additional compile options are provided through ``cmake``:
 
    .. code-block:: console
 
-      cmake -DDOUBLE_PRECISION=ON
+      cmake -DMIR_DOUBLE_PRECISION=ON
 
    When using the `Tools`_, the compile options can be passed using the ``CMAKE_FLAGS`` variable:
 
    .. code-block:: console
 
-      CMAKE_FLAGS="-DDOUBLE_PRECISION=ON" mir.make
+      CMAKE_FLAGS="-DMIR_DOUBLE_PRECISION=ON" mir.make
 
 .. note::
 

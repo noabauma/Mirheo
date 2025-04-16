@@ -36,9 +36,26 @@ make install
 
 ### unreleased
 
+* Add particle averager plugin
+* Add binding (spring) interaction between particle vectors
+* Add Shardlow integrator for membranes
+* Docs: Add ADE model and add the corresponding reference.
+* **interface changes**
+  * remove `setSpecificPair` from pirwise interactions. The same effect can be obtained by creating more pairwise interactions instead.
+
+
+### v1.5.0
+
 * Add MSD plugin.
 * update pybind11 submodule.
 * update variant submodule (now supports nvcc-10.2).
+* Cmake options are prepended with `MIR_`
+* add support for multistage simulations: `run` may be invoked multiple times
+* add `Mirheo::deregisterIntegrator` and `Mirheo::deregisterPlugin`
+* **interface changes**
+  * the `dt` parameter was moved from the `Mirheo` constructor to the `run`, `makeFrozenWallParticles` and `makeFrozenRigidParticles` methods
+* **internal changes**
+  * `MirState::dt` may now be accessed only through `MirState::getState` and only during `Mirheo::run`.
 
 ### v1.4.1
 

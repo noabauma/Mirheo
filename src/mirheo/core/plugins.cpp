@@ -4,21 +4,18 @@
 #include <mirheo/core/logger.h>
 #include <mirheo/core/utils/config.h>
 
+#include <cassert>
+
 namespace mirheo
 {
 
 Plugin::Plugin() :
-    comm_     (MPI_COMM_NULL),
     interComm_(MPI_COMM_NULL),
     rank_{-1},
     nranks_{-1}
 {}
 
-Plugin::~Plugin()
-{
-    if (comm_ != MPI_COMM_NULL)
-        MPI_Check(MPI_Comm_free(&comm_));
-}
+Plugin::~Plugin() = default;
 
 void Plugin::handshake() {}
 
@@ -29,7 +26,12 @@ void Plugin::setTag(int tag)
 
 void Plugin::_setup(const MPI_Comm& comm, const MPI_Comm& interComm)
 {
-    MPI_Check( MPI_Comm_dup(comm, &comm_) );
+    if (comm_ != MPI_COMM_NULL) {
+        assert(interComm_ == interComm);
+        return;
+    }
+
+    MPI_Check( MPI_Comm_dup(comm, comm_.reset_and_get_address()) );
     interComm_ = interComm;
 
     MPI_Check( MPI_Comm_rank(comm_, &rank_) );

@@ -249,6 +249,27 @@ void ParticleVector::setForces_vector(const std::vector<real3>& forces)
     local()->forces().uploadToDevice(defaultStream);
 }
 
+void ParticleVector::updateChannel(const std::string channelName, const std::vector<real3> values)
+{
+    PinnedBuffer<real3>* container = local()->dataPerParticle.getData<real3>(channelName);
+
+    const size_t n = container->size();
+    if(values.size() != n){
+        throw std::invalid_argument("New Array of size: " + std::to_string(values.size()) + 
+        " not the same size as " + channelName + 
+        ": " + std::to_string(n) + "\n");
+    }
+
+    for(size_t i = 0; i < n; ++i){
+        (*container)[i].x = values[i].x;
+        (*container)[i].y = values[i].y;
+        (*container)[i].z = values[i].z;
+    }
+    
+    container->uploadToDevice(defaultStream);
+}
+
+
 void ParticleVector::_snapshotParticleData(MPI_Comm comm, const std::string& filename)
 {
     CUDA_Check( cudaDeviceSynchronize() );

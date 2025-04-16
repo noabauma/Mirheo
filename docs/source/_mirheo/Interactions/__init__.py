@@ -42,7 +42,11 @@ class MembraneForces(Interaction):
             U_b = 2 k_b \sum_{\alpha = 1}^{N_v} \frac {\left( M_{\alpha} - C_0\right)^2}{A_\alpha}, \\
             M_{\alpha} = \frac 1 4 \sum_{<i,j>}^{(\alpha)} l_{ij} \theta_{ij}.
 
-        It is improved with the ADE model (TODO: ref).
+        It is improved with the area-difference model (see [Bian2020]_), which is a discretized version of:
+
+        .. math::
+
+            U_{AD} = \frac{k_{AD} \pi}{2 D_0^2 A_0} \left(\Delta A - \Delta A_0 \right)^2.
 
         Currently, the stretching and shear energy models are:
 
@@ -73,13 +77,17 @@ class MembraneForces(Interaction):
                            Shape transformations of vesicles with intramembrane domains.
                            Physical Review E 53.3 (1996): 2670.
 
+        .. [Bian2020] Bian, Xin, Sergey Litvinov, and Petros Koumoutsakos.
+                      Bending models of lipid bilayer membranes: Spontaneous curvature and area-difference elasticity.
+                      Computer Methods in Applied Mechanics and Engineering 359 (2020): 112758.
+
         .. [Lim2008] Lim HW, Gerald, Michael Wortis, and Ranjan Mukhopadhyay.
                      Red blood cell shapes and shape transformations: newtonian mechanics of a composite membrane: sections 2.1–2.4.
                      Soft Matter: Lipid Bilayers and Red Blood Cells 4 (2008): 83-139.
     
     """
     def __init__():
-        r"""__init__(name: str, shear_desc: str, bending_desc: str, filter_desc: str = 'keep_all', stress_free: bool = False, **kwargs) -> None
+        r"""__init__(name: str, shear_desc: str, bending_desc: str, filter_desc: str='keep_all', stress_free: bool=False, **kwargs) -> None
 
 
              Args:
@@ -96,8 +104,7 @@ class MembraneForces(Interaction):
                  * **ka_tot**:                  constraint energy for total area
                  * **kv_tot**:                  constraint energy for total volume
                  * **kBT**:                     fluctuation temperature (set to zero will switch off fluctuation forces)
-                 * **gammaC**:                  central component of dissipative forces
-                 * **gammaT**:                  tangential component of dissipative forces (warning: if non zero, the interaction will NOT conserve angular momentum)
+                 * **gammaC**:                  dissipative forces coefficient
                  * **initial_length_fraction**: the size of the membrane increases linearly in time from this fraction of the provided mesh to its full size after grow_until time; the parameters are scaled accordingly with time. If this is set, **grow_until** must also be provided. Default value: 1.
                  * **grow_until**:              the size increases linearly in time from a fraction of the provided mesh to its full size after that time; the parameters are scaled accordingly with time. If this is set, **initial_length_fraction** must also be provided. Default value: 0
 
@@ -143,6 +150,29 @@ class MembraneForces(Interaction):
         """
         pass
 
+class ObjBinding(Interaction):
+    r"""
+        Forces attaching a :any:`ParticleVector` to another via harmonic potentials between the particles of specific pairs.
+
+        .. warning::
+            To deal with MPI, the force is zero if two particles of a pair are apart from more than half the subdomain size. Since this interaction is designed to bind objects to each other, this should not happen under normal conditions.
+
+    
+    """
+    def __init__():
+        r"""__init__(name: str, k_bound: float, pairs: List[int2]) -> None
+
+
+            Args:
+                name: Name of the interaction.
+                k_bound: Spring force coefficient.
+                pairs: The global Ids of the particles that will interact through the harmonic potential. For each pair, the first entry is the id of pv1 while the second is that of pv2 (see :any:`setInteraction`).
+
+    
+
+        """
+        pass
+
 class ObjRodBinding(Interaction):
     r"""
         Forces attaching a :any:`RodVector` to a :any:`RigidObjectVector`.
@@ -177,8 +207,8 @@ class Pairwise(Interaction):
 
                 \mathbf{F}_{ij} &= \left(\mathbf{F}^C_{ij} + \mathbf{F}^D_{ij} + \mathbf{F}^R_{ij} \right)  \mathbf{\hat r} \\
                 F^C_{ij} &= \begin{cases} a(1-\frac{r}{r_c}), & r < r_c \\ 0, & r \geqslant r_c \end{cases} \\
-                F^D_{ij} &= -\gamma w^2(\frac{r}{r_c}) (\mathbf{r} \cdot \mathbf{u}) \\
-                F^R_{ij} &= \sigma w(\frac{r}{r_c}) \, \theta \sqrt{\Delta t} \,
+                F^D_{ij} &= -\gamma w^2(\tfrac{r}{r_c}) (\mathbf{\hat r} \cdot \mathbf{u}) \\
+                F^R_{ij} &= \sigma w(\tfrac{r}{r_c}) \, \frac{\theta}{\sqrt{\Delta t}} \,
 
             where bold symbol means a vector, its regular counterpart means vector length:
             :math:`x = \left\lVert \mathbf{x} \right\rVert`, hat-ed symbol is the normalized vector:
@@ -377,23 +407,6 @@ class Pairwise(Interaction):
         """
         pass
 
-    def setSpecificPair():
-        r"""setSpecificPair(pv1: ParticleVectors.ParticleVector, pv2: ParticleVectors.ParticleVector, **kwargs) -> None
-
-
-        Set specific parameters of a given interaction for a specific pair of :any:`ParticleVector`.
-        This is useful when interactions only slightly differ between different pairs of :any:`ParticleVector`.
-        The specific parameters should be set in the **kwargs** field, with same naming as in construction of the interaction.
-        Note that only the values of the parameters can be modified, not the kernel types (e.g. change of density kernel is not supported in the case of SDPD interactions).
-
-        Args:
-            pv1: first :any:`ParticleVector`
-            pv2: second :any:`ParticleVector`
-    
-
-        """
-        pass
-
 class RodForces(Interaction):
     r"""
         Forces acting on an elastic rod.
@@ -431,7 +444,7 @@ class RodForces(Interaction):
     
     """
     def __init__():
-        r"""__init__(name: str, state_update: str = 'none', save_energies: bool = False, **kwargs) -> None
+        r"""__init__(name: str, state_update: str='none', save_energies: bool=False, **kwargs) -> None
 
 
              Args:

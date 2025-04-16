@@ -1,12 +1,14 @@
 // Copyright 2020 ETH Zurich. All Rights Reserved.
 #include <mirheo/core/pvs/particle_vector.h>
 
-#include <mirheo/core/interactions/pairwise/base_pairwise.h>
 #include <mirheo/core/interactions/factory.h>
 #include <mirheo/core/interactions/interface.h>
 #include <mirheo/core/interactions/membrane/base_membrane.h>
+#include <mirheo/core/interactions/obj_binding.h>
 #include <mirheo/core/interactions/obj_rod_binding.h>
+#include <mirheo/core/interactions/pairwise/base_pairwise.h>
 #include <mirheo/core/interactions/rod/base_rod.h>
+#include <mirheo/core/interactions/triplewise/base_triplewise.h>
 
 #include "bindings.h"
 #include "class_wrapper.h"
@@ -67,6 +69,14 @@ createPairwiseInteraction(const MirState *state, const std::string& name,
     return interaction_factory::createPairwiseInteraction(state, name, rc, kind, parameters);
 }
 
+static std::shared_ptr<BaseTriplewiseInteraction>
+createTriplewiseInteraction(const MirState *state, const std::string& name,
+                            real rc, const std::string& kind, py::kwargs kwargs)
+{
+    auto parameters = castToMap(kwargs, name);
+    return interaction_factory::createTriplewiseInteraction(state, name, rc, kind, parameters);
+}
+
 void exportInteractions(py::module& m)
 {
     py::handlers_class<Interaction> pyInt(m, "Interaction", "Base interaction class");
@@ -84,8 +94,8 @@ void exportInteractions(py::module& m)
 
                 \mathbf{F}_{ij} &= \left(\mathbf{F}^C_{ij} + \mathbf{F}^D_{ij} + \mathbf{F}^R_{ij} \right)  \mathbf{\hat r} \\
                 F^C_{ij} &= \begin{cases} a(1-\frac{r}{r_c}), & r < r_c \\ 0, & r \geqslant r_c \end{cases} \\
-                F^D_{ij} &= -\gamma w^2(\frac{r}{r_c}) (\mathbf{r} \cdot \mathbf{u}) \\
-                F^R_{ij} &= \sigma w(\frac{r}{r_c}) \, \theta \sqrt{\Delta t} \,
+                F^D_{ij} &= -\gamma w^2(\tfrac{r}{r_c}) (\mathbf{\hat r} \cdot \mathbf{u}) \\
+                F^R_{ij} &= \sigma w(\tfrac{r}{r_c}) \, \frac{\theta}{\sqrt{\Delta t}} \,
 
             where bold symbol means a vector, its regular counterpart means vector length:
             :math:`x = \left\lVert \mathbf{x} \right\rVert`, hat-ed symbol is the normalized vector:
@@ -193,6 +203,22 @@ void exportInteractions(py::module& m)
                     w_\rho(r) = \frac{21}{2\pi} \left( 1 - \frac{r}{r_c} \right)^4 \left( 1 + 4 \frac{r}{r_c} \right)
 
 
+        * **SW**:
+            Stillinger-Weber (SW) 2-Body & 3-Body interaction potential which takes into account the angle between the particles
+
+            .. math::
+
+                \varphi_2(r) = A\epsilon \Bigl[B\Bigl(\frac{\sigma}{r}\Bigr)^p - \Bigl(\frac{\sigma}{r}\Bigr)^q\Bigr]\exp\Bigl(\frac{\sigma}{r-r_c}\Bigr)
+
+            .. math::
+
+                \varphi_3(\vec{r}_i,\vec{r}_j,\vec{r}_k)
+                    = h_{jik} + h_{ijk} + h_{ikj} \\
+                    = h(r_{ij}, r_{ki}, \theta_{jik}) + h(r_{ij}, r_{jk}, \theta_{ijk}) + h(r_{ki}, r_{jk}, \theta_{ikj}),
+                
+
+                h(r,s,\theta) = \lambda\epsilon[\cos\theta - \cos\theta_0]^2\exp\Bigl(\frac{\gamma\sigma}{r-r_c}\Bigr)\exp\Bigl(\frac{\gamma\sigma}{s-r_c}\Bigr)
+        
         .. [Groot1997] Groot, R. D., & Warren, P. B. (1997).
             Dissipative particle dynamics: Bridging the gap between atomistic and mesoscopic simulations.
             J. Chem. Phys., 107(11), 4423-4435. `doi <https://doi.org/10.1063/1.474784>`
@@ -279,21 +305,6 @@ void exportInteractions(py::module& m)
                 * **rho_r**: :math:`\rho_r`
     )");
 
-    pyIntPairwise.def("setSpecificPair", [](BasePairwiseInteraction *self, ParticleVector *pv1, ParticleVector *pv2, py::kwargs kwargs)
-    {
-        auto params = castToMap(kwargs, self->getName());
-        self->setSpecificPair(pv1->getName(), pv2->getName(), params);
-    }, "pv1"_a, "pv2"_a, R"(
-        Set specific parameters of a given interaction for a specific pair of :any:`ParticleVector`.
-        This is useful when interactions only slightly differ between different pairs of :any:`ParticleVector`.
-        The specific parameters should be set in the **kwargs** field, with same naming as in construction of the interaction.
-        Note that only the values of the parameters can be modified, not the kernel types (e.g. change of density kernel is not supported in the case of SDPD interactions).
-
-        Args:
-            pv1: first :any:`ParticleVector`
-            pv2: second :any:`ParticleVector`
-    )");
-
     py::handlers_class<BaseMembraneInteraction> pyMembraneForces(m, "MembraneForces", pyInt, R"(
         Abstract class for membrane interactions.
         Mesh-based forces acting on a membrane according to the model in [Fedosov2010]_
@@ -329,7 +340,11 @@ void exportInteractions(py::module& m)
             U_b = 2 k_b \sum_{\alpha = 1}^{N_v} \frac {\left( M_{\alpha} - C_0\right)^2}{A_\alpha}, \\
             M_{\alpha} = \frac 1 4 \sum_{<i,j>}^{(\alpha)} l_{ij} \theta_{ij}.
 
-        It is improved with the ADE model (TODO: ref).
+        It is improved with the area-difference model (see [Bian2020]_), which is a discretized version of:
+
+        .. math::
+
+            U_{AD} = \frac{k_{AD} \pi}{2 D_0^2 A_0} \left(\Delta A - \Delta A_0 \right)^2.
 
         Currently, the stretching and shear energy models are:
 
@@ -360,6 +375,10 @@ void exportInteractions(py::module& m)
                            Shape transformations of vesicles with intramembrane domains.
                            Physical Review E 53.3 (1996): 2670.
 
+        .. [Bian2020] Bian, Xin, Sergey Litvinov, and Petros Koumoutsakos.
+                      Bending models of lipid bilayer membranes: Spontaneous curvature and area-difference elasticity.
+                      Computer Methods in Applied Mechanics and Engineering 359 (2020): 112758.
+
         .. [Lim2008] Lim HW, Gerald, Michael Wortis, and Ranjan Mukhopadhyay.
                      Red blood cell shapes and shape transformations: newtonian mechanics of a composite membrane: sections 2.1–2.4.
                      Soft Matter: Lipid Bilayers and Red Blood Cells 4 (2008): 83-139.
@@ -383,8 +402,7 @@ void exportInteractions(py::module& m)
                  * **ka_tot**:                  constraint energy for total area
                  * **kv_tot**:                  constraint energy for total volume
                  * **kBT**:                     fluctuation temperature (set to zero will switch off fluctuation forces)
-                 * **gammaC**:                  central component of dissipative forces
-                 * **gammaT**:                  tangential component of dissipative forces (warning: if non zero, the interaction will NOT conserve angular momentum)
+                 * **gammaC**:                  dissipative forces coefficient
                  * **initial_length_fraction**: the size of the membrane increases linearly in time from this fraction of the provided mesh to its full size after grow_until time; the parameters are scaled accordingly with time. If this is set, **grow_until** must also be provided. Default value: 1.
                  * **grow_until**:              the size increases linearly in time from a fraction of the provided mesh to its full size after that time; the parameters are scaled accordingly with time. If this is set, **initial_length_fraction** must also be provided. Default value: 0
 
@@ -427,6 +445,23 @@ void exportInteractions(py::module& m)
                  * **type_id**: the type id that the interaction applies to
     )");
 
+
+    py::handlers_class<ObjectBindingInteraction> pyObjBinding(m, "ObjBinding", pyInt, R"(
+        Forces attaching a :any:`ParticleVector` to another via harmonic potentials between the particles of specific pairs.
+
+        .. warning::
+            To deal with MPI, the force is zero if two particles of a pair are apart from more than half the subdomain size. Since this interaction is designed to bind objects to each other, this should not happen under normal conditions.
+
+    )");
+
+    pyObjBinding.def(py::init(&interaction_factory::createInteractionObjBinding),
+                     "state"_a, "name"_a, "k_bound"_a, "pairs"_a, R"(
+            Args:
+                name: Name of the interaction.
+                k_bound: Spring force coefficient.
+                pairs: The global Ids of the particles that will interact through the harmonic potential. For each pair, the first entry is the id of pv1 while the second is that of pv2 (see :any:`libmirheo.setInteraction`).
+
+    )");
 
     py::handlers_class<ObjectRodBindingInteraction> pyObjRodBinding(m, "ObjRodBinding", pyInt, R"(
         Forces attaching a :any:`RodVector` to a :any:`RigidObjectVector`.
@@ -510,6 +545,42 @@ void exportInteractions(py::module& m)
              The interaction can support multiple polymorphic states if **kappa0**, **tau0** and **E0** are lists of equal size.
              In this case, the **E0** parameter is required.
              Only lists of 1, 2 and 11 states are supported.
+    )");
+
+
+    py::handlers_class<BaseTriplewiseInteraction> pyIntTriplewise(m, "Triplewise", pyInt, R"(
+        Generic triplewise interaction class.
+        Can be applied between any kind of :any:`ParticleVector` classes.
+        The following interactions are currently implemented:
+
+
+        * **Dummy**:
+            A dummy constant force in x-direction, for testing purposes.
+
+            .. math::
+
+                \mathbf{F}_{ij} &= \varepsilon \mathbf{\hat{x}}
+
+        * **SW**:
+            **TODO**
+    )");
+
+    pyIntTriplewise.def(py::init(&createTriplewiseInteraction),
+                        "state"_a, "name"_a, "rc"_a, "kind"_a, R"(
+            Args:
+                name: name of the interaction
+                rc: interaction cut-off (no forces between particles further than **rc** apart)
+                kind: interaction kind (e.g. SW). See below for all possibilities.
+
+            Create one triplewise interaction handler of kind **kind**.
+
+            * **kind** = "Dummy"
+
+                * **epsilon**: :math:`\varepsilon`
+
+            * **kind** = "SW"
+
+                **TODO**
     )");
 }
 

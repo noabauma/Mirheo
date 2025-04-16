@@ -8,6 +8,7 @@
 #include "average_relative_flow.h"
 #include "berendsen_thermostat.h"
 #include "channel_dumper.h"
+#include "copy_pv.h"
 #include "outlet.h"
 #include "density_control.h"
 #include "displacement.h"
@@ -23,6 +24,7 @@
 #include "magnetic_orientation.h"
 #include "membrane_extra_force.h"
 #include "msd.h"
+#include "particle_channel_averager.h"
 #include "particle_channel_saver.h"
 #include "particle_checker.h"
 #include "particle_drag.h"
@@ -30,6 +32,7 @@
 #include "pin_rod_extremity.h"
 #include "rdf.h"
 #include "stats.h"
+#include "stress_tensor.h"
 #include "temperaturize.h"
 #include "vacf.h"
 #include "velocity_control.h"
@@ -100,6 +103,12 @@ PairPlugin createBerendsenThermostatPlugin(
                 state, name, extractPVNames(pvs), kBT, tau, increaseIfLower) : nullptr,
         nullptr
     };
+}
+
+PairPlugin createCopyPVPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pvTarget, ParticleVector *pvSource)
+{
+    auto simPl = computeTask ? std::make_shared<CopyPVPlugin> (state, name, pvTarget->getName(), pvSource->getName()) : nullptr;
+    return { simPl, nullptr };
 }
 
 PairPlugin createDensityControlPlugin(bool computeTask, const MirState *state, std::string name, std::string fname, std::vector<ParticleVector*> pvs,
@@ -282,10 +291,21 @@ PairPlugin createMsdPlugin(bool computeTask, const MirState *state, std::string 
     return { simPl, postPl };
 }
 
+PairPlugin createParticleChannelAveragerPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
+                                               std::string channelName, std::string averageName, real updateEvery)
+{
+    auto simPl = computeTask
+        ? std::make_shared<ParticleChannelAveragerPlugin> (state, name, pv->getName(), channelName, averageName, updateEvery)
+        : nullptr;
+    return { simPl, nullptr };
+}
+
 PairPlugin createParticleChannelSaverPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
                                             std::string channelName, std::string savedName)
 {
-    auto simPl = computeTask ? std::make_shared<ParticleChannelSaverPlugin> (state, name, pv->getName(), channelName, savedName) : nullptr;
+    auto simPl = computeTask
+        ? std::make_shared<ParticleChannelSaverPlugin> (state, name, pv->getName(), channelName, savedName)
+        : nullptr;
     return { simPl, nullptr };
 }
 
@@ -362,6 +382,14 @@ PairPlugin createStatsPlugin(bool computeTask, const MirState *state, std::strin
     auto simPl  = computeTask ? std::make_shared<SimulationStats> (state, name, every) : nullptr;
     auto postPl = computeTask ? nullptr : std::make_shared<PostprocessStats> (name, filename);
 
+    return { simPl, postPl };
+}
+
+PairPlugin createStressTensorPlugin(bool computeTask, const MirState *state, std::string name, ParticleVector *pv,
+                                       int dumpEvery, std::string mask, std::string path)
+{
+    auto simPl  = computeTask ? std::make_shared<StressTensorPlugin> (state, name, pv->getName(), dumpEvery) : nullptr;
+    auto postPl = computeTask ? nullptr : std::make_shared<StressTensorDumper> (name, mask, path);
     return { simPl, postPl };
 }
 

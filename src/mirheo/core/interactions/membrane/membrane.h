@@ -18,18 +18,13 @@
 namespace mirheo
 {
 
-/** \brief Convert model parameters struct to a struct usable on device.
+/** \brief Extract the constraint parameters to a struct usable on device.
     \param [in] p model parameters
-    \param [in,out] stepGen Random number generator
-    \param [in] state Simulation state
     \return parameters to be passed to GPU kernels
  */
-static membrane_forces_kernels::GPU_CommonMembraneParameters setParams(const CommonMembraneParameters& p, StepRandomGen& stepGen, const MirState *state)
+static membrane_forces_kernels::GPUConstraintMembraneParameters getConstraintParams(const CommonMembraneParameters& p)
 {
-    membrane_forces_kernels::GPU_CommonMembraneParameters devP;
-
-    devP.gammaC = p.gammaC;
-    devP.gammaT = p.gammaT;
+    membrane_forces_kernels::GPUConstraintMembraneParameters devP;
 
     devP.totArea0   = p.totArea0;
     devP.totVolume0 = p.totVolume0;
@@ -37,14 +32,25 @@ static membrane_forces_kernels::GPU_CommonMembraneParameters setParams(const Com
     devP.ka0 = p.ka / p.totArea0;
     devP.kv0 = p.kv / (6.0_r*p.totVolume0);
 
-    devP.fluctuationForces = p.fluctuationForces;
+    return devP;
+}
 
-    if (devP.fluctuationForces)
-    {
-        const auto dt = state->dt;
-        devP.seed = stepGen.generate(state);
-        devP.sigma_rnd = math::sqrt(2 * p.kBT * p.gammaC / dt);
-    }
+/** \brief Convert model parameters struct to a struct usable on device.
+    \param [in] p model parameters
+    \param [in,out] stepGen Random number generator
+    \param [in] state Simulation state
+    \return parameters to be passed to GPU kernels
+ */
+static membrane_forces_kernels::GPUViscMembraneParameters getViscParams(const CommonMembraneParameters& p, StepRandomGen& stepGen, const MirState *state)
+{
+    membrane_forces_kernels::GPUViscMembraneParameters devP;
+
+    devP.gammaC = p.gammaC;
+
+    devP.seed = stepGen.generate(state);
+
+    const auto dt = state->getDt();
+    devP.sigma_rnd = math::sqrt(2 * p.kBT * p.gammaC / dt);
 
     return devP;
 }
@@ -58,9 +64,7 @@ static void rescaleParameters(CommonMembraneParameters& p, real scale)
     p.totArea0   *= scale * scale;
     p.totVolume0 *= scale * scale * scale;
     p.kBT        *= scale * scale;
-
-    p.gammaC *= scale;
-    p.gammaT *= scale;
+    p.gammaC     *= scale;
 }
 
 /** \brief Generic implementation of membrane forces.
@@ -122,8 +126,10 @@ public:
 
     void local(ParticleVector *pv1,
                __UNUSED ParticleVector *pv2,
+               __UNUSED ParticleVector *pv3,
                __UNUSED CellList *cl1,
                __UNUSED CellList *cl2,
+               __UNUSED CellList *cl3,
                cudaStream_t stream) override
     {
         auto mv = dynamic_cast<MembraneVector *>(pv1);
@@ -149,7 +155,7 @@ public:
         const int nthreads = 128;
         const int nblocks  = getNblocks(view.size, nthreads);
 
-        const auto devParams = setParams(currentParams, stepGen_, getState());
+        const auto devConstraintParams = getConstraintParams(currentParams);
 
         DihedralInteraction dihedralInteraction(dihedralParams_, scale);
         TriangleInteraction triangleInteraction(triangleParams_, mesh, scale);
@@ -160,16 +166,28 @@ public:
             nblocks, nthreads, 0, stream,
             triangleInteraction,
             dihedralInteraction, dihedralView,
-            view, meshView, devParams, filter_);
+            view, meshView, devConstraintParams, filter_);
 
+        const auto devViscParams = getViscParams(currentParams, stepGen_, getState());
+
+        if (devViscParams.sigma_rnd == 0 &&
+            devViscParams.gammaC == 0)
+            return;
+
+        SAFE_KERNEL_LAUNCH(
+            membrane_forces_kernels::computeMembraneViscousFluctForces,
+            nblocks, nthreads, 0, stream,
+            view, meshView, devViscParams, filter_);
     }
 
     void setPrerequisites(ParticleVector *pv1,
                           __UNUSED ParticleVector *pv2,
+                          __UNUSED ParticleVector *pv3,
                           __UNUSED CellList *cl1,
-                          __UNUSED CellList *cl2) override
+                          __UNUSED CellList *cl2,
+                          __UNUSED CellList *cl3) override
     {
-        BaseMembraneInteraction::setPrerequisites(pv1, pv2, cl1, cl2);
+        BaseMembraneInteraction::setPrerequisites(pv1, pv2, pv3, cl1, cl2, cl3);
 
         if (auto mv = dynamic_cast<MembraneVector*>(pv1))
         {

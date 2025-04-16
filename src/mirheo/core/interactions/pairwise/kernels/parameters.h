@@ -10,10 +10,10 @@ namespace mirheo
 
 // forward declaration of pairwise kernels
 
+class PairwiseSW;
 class PairwiseDPD;
 class PairwiseNoRandomDPD;
 class PairwiseLJ;
-class PairwiseSW;   //Noah Baumann
 
 struct LJAwarenessNone;
 struct LJAwarenessObject;
@@ -39,6 +39,16 @@ class PairwiseSDPD;
 // corresponding parameters, visible by users
 
 /// Dissipative Particle Dynamics  parameters
+struct SW2Params
+{
+    using KernelType = PairwiseSW; ///< the corresponding kernel
+    real epsilon;   ///< force coefficient
+    real sigma;     ///< radius with zero energy in SW potential
+    real A;         ///< SW Parameter
+    real B;         ///< SW Parameter
+};
+MIRHEO_MEMBER_VARS(SW2Params, epsilon, sigma, A, B);
+
 struct DPDParams
 {
     using KernelType = PairwiseDPD; ///< the corresponding kernel
@@ -181,7 +191,8 @@ struct SDPDParams
 MIRHEO_MEMBER_VARS(SDPDParams, viscosity, kBT, varEOSParams, varDensityKernelParams);
 
 /// variant of all possible pairwise interactions
-using VarPairwiseParams = mpark::variant<DPDParams,
+using VarPairwiseParams = mpark::variant<SW2Params,
+                                         DPDParams,
                                          LJParams,
                                          RepulsiveLJParams,
                                          MDPDParams,

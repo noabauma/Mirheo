@@ -7,7 +7,7 @@ dt = 0.001
 ranks  = (1, 1, 1)
 domain = (12, 12, 12)
 
-u = mir.Mirheo(ranks, domain, dt, debug_level=3, log_filename='log')
+u = mir.Mirheo(ranks, domain, debug_level=3, log_filename='log')
 
 # we need to first create a mesh before initializing the membrane vector
 mesh_rbc = mir.ParticleVectors.MembraneMesh("rbc_mesh.off")
@@ -31,7 +31,6 @@ prms_rbc = {
     "ks"     : 0.0444 / 0.000906667,
     "mpow"   : 2.0,
     "gammaC" : 52.0,
-    "gammaT" : 0.0,
     "kBT"    : 0.0,
     "tot_area"   : 62.2242,
     "tot_volume" : 26.6649,
@@ -54,4 +53,4 @@ u.setInteraction(int_rbc, pv_rbc, pv_rbc)
 # dump the mesh every 50 steps in ply format to the folder 'ply/'
 u.registerPlugins(mir.Plugins.createDumpMesh("mesh_dump", pv_rbc, 50, "ply/"))
 
-u.run(5002)
+u.run(5002, dt=dt)

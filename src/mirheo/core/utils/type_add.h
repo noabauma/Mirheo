@@ -63,4 +63,5 @@ __D__ inline void apply(RigidMotion *addr, RigidMotion s, real eps = 0._r)
 
 } // namespace type_atomic_add
 
+
 } // namespace mirheo

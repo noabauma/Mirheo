@@ -20,8 +20,6 @@ class MirState;
 class ParticleVector;
 class ObjectVector;
 class CellList;
-class TaskScheduler;
-class InteractionManager;
 
 class Wall;
 class Interaction;
@@ -31,7 +29,7 @@ class Bouncer;
 class ObjectBelongingChecker;
 class SimulationPlugin;
 struct SimulationTasks;
-class ExchangeEngine;
+struct RunData;
 
 /** \brief Manage and combine all MirObject objects to run a simulation.
 
@@ -119,6 +117,17 @@ public:
     */
     void registerObjectBelongingChecker(std::shared_ptr<ObjectBelongingChecker> checker);
 
+    /** \brief deregister an \c Integrator
+        \param integrator the \c Integrator to deregister.
+        \see registerIntegrator().
+    */
+    void deregisterIntegrator(Integrator *integrator);
+
+    /** \brief deregister a SimulationPlugin
+        \param plugin the SimulationPlugin to deregister.
+        \note If there is a \c Postprocess rank, the corresponding PostprocessPlugin must also be deregistered.
+    */
+    void deregisterPlugin(SimulationPlugin *plugin);
 
     /** \brief Assign a registered \c Integrator to a registered ParticleVector.
         \param integratorName Name of the registered integrator (will die if it does not exist)
@@ -130,11 +139,12 @@ public:
         \param interactionName Name of the registered interaction (will die if it does not exist)
         \param pv1Name Name of the first registered ParticleVector (will die if it does not exist)
         \param pv2Name Name of the second registered ParticleVector (will die if it does not exist)
+        \param pv3Name Name of the third registered ParticleVector (if set, will die if it does not exist)
 
         This was designed to handle PairwiseInteraction, which needs up to two ParticleVector.
         For self interaction cases (such as MembraneInteraction), \p pv1Name and \p pv2Name must be the same.
      */
-    void setInteraction(const std::string& interactionName, const std::string& pv1Name, const std::string& pv2Name);
+    void setInteraction(const std::string& interactionName, const std::string& pv1Name, const std::string& pv2Name, const std::string& pv3Name = {});
 
     /** \brief Assign a registered \c Bouncer to registered ObjectVector and ParticleVector.
         \param bouncerName Name of the registered bouncer (will die if it does not exist)
@@ -177,7 +187,7 @@ public:
 
 
     void init(); ///< setup all the simulation tasks from the registered objects and their relation. Must be called after all the register and set methods.
-    void run(int nsteps); ///< advance the system for a given number of time steps. Must be called after init()
+    void run(MirState::StepType nsteps); ///< advance the system for a given number of time steps. Must be called after init()
 
     /** \brief Send a tagged message to the \c Postprocess rank.
         This is useful to pass special messages, e.g. termination or checkpoint.
@@ -238,8 +248,8 @@ protected:
     ConfigObject _saveSnapshot(Saver& saver, const std::string& typeName);
 
 private:
-    std::vector<std::string> _getExtraDataToExchange(ObjectVector *ov);
-    std::vector<std::string> _getDataToSendBack(const std::vector<std::string>& extraOut, ObjectVector *ov);
+    std::vector<std::string> _getExtraDataToExchange(ObjectVector *ov) const;
+    std::vector<std::string> _getDataToSendBack(const std::vector<std::string>& extraOut, ObjectVector *ov) const;
 
     void _prepareCellLists();
     void _prepareInteractions();
@@ -251,6 +261,7 @@ private:
     void _execSplitters();
 
     void _createTasks();
+    void _cleanup(); ///< Detach run data from all objects and deallocate run_.
 
     using MirObject::restart;
     using MirObject::checkpoint;
@@ -259,8 +270,6 @@ private:
     void _checkpointState();
 
 private:
-    using ExchangeEngineUniquePtr = std::unique_ptr<ExchangeEngine>;
-
     template <class T>
     using MapShared = std::map< std::string, std::shared_ptr<T> >;
 
@@ -273,7 +282,7 @@ private:
     struct InteractionPrototype
     {
         real rc;
-        ParticleVector *pv1, *pv2;
+        ParticleVector *pv1, *pv2, *pv3;
         Interaction *interaction;
     };
 
@@ -326,17 +335,11 @@ private:
     const CheckpointInfo checkpointInfo_;
     const int rank_;
 
-    std::unique_ptr<TaskScheduler> scheduler_;
-    std::unique_ptr<SimulationTasks> tasks_;
-
-    std::unique_ptr<InteractionManager> interactionsIntermediate_, interactionsFinal_;
+    /// Data constructed in init() and used during the execution of run().
+    std::unique_ptr<RunData> run_;
 
     const bool gpuAwareMPI_;
 
-    ExchangeEngineUniquePtr partRedistributor_, objRedistibutor_;
-    ExchangeEngineUniquePtr partHaloIntermediate_, partHaloFinal_;
-    ExchangeEngineUniquePtr objHaloIntermediate_, objHaloReverseIntermediate_;
-    ExchangeEngineUniquePtr objHaloFinal_, objHaloReverseFinal_;
 
     std::map<std::string, int> pvIdMap_;
     std::vector< std::shared_ptr<ParticleVector> > particleVectors_;
@@ -350,8 +353,6 @@ private:
 
     std::vector< std::shared_ptr<SimulationPlugin> > plugins;
 
-    std::map<ParticleVector*, std::vector< std::unique_ptr<CellList> >> cellListMap_;
-
     std::vector<IntegratorPrototype>          integratorPrototypes_;
     std::vector<InteractionPrototype>         interactionPrototypes_;
     std::vector<WallPrototype>                wallPrototypes_;
@@ -359,8 +360,6 @@ private:
     std::vector<BouncerPrototype>             bouncerPrototypes_;
     std::vector<BelongingCorrectionPrototype> belongingCorrectionPrototypes_;
     std::vector<SplitterPrototype>            splitterPrototypes_;
-
-    std::vector<std::function<void(cudaStream_t)>> regularBouncers_, haloBouncers_;
 
     std::map<std::string, std::string> pvsIntegratorMap_;
 };

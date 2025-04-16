@@ -8,6 +8,20 @@ namespace factory_helper
 {
 template <> real ParamsReader::makeDefault<real>() const {return defaultReal;}
 
+
+template <> void readParams<SW2Params>(SW2Params& p, ParametersWrap& desc, ParamsReader reader)
+{
+    const auto epsilon = reader.read<real>(desc, "epsilon");
+    const auto sigma   = reader.read<real>(desc, "sigma");
+    const auto A       = reader.read<real>(desc, "A");
+    const auto B       = reader.read<real>(desc, "B");
+
+    if (epsilon != defaultReal) p.epsilon  = epsilon;
+    if (sigma   != defaultReal) p.sigma    = sigma;
+    if (A       != defaultReal) p.A        = A;
+    if (B       != defaultReal) p.B        = B;
+}
+
 template <> void readParams<DPDParams>(DPDParams& p, ParametersWrap& desc, ParamsReader reader)
 {
     const auto a     = reader.read<real>(desc, "a");
@@ -111,7 +125,13 @@ template <> void readParams<SDPDParams>(SDPDParams& p, ParametersWrap& desc, Par
     if (kBT       != defaultReal) p.kBT       = kBT;
 }
 
-
+SW2Params readSW2Params(ParametersWrap& desc)
+{
+    const ParamsReader reader {ParamsReader::Mode::FailIfNotFound};
+    SW2Params p;
+    readParams(p, desc, reader);
+    return p;
+}
 
 DPDParams readDPDParams(ParametersWrap& desc)
 {

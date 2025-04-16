@@ -21,7 +21,8 @@ public:
     BaseRodInteraction(const MirState *state, const std::string& name);
     ~BaseRodInteraction();
 
-    void halo(ParticleVector *pv1, ParticleVector *pv2, CellList *cl1, CellList *cl2, cudaStream_t stream) final;
+    void halo(ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3,
+              CellList *cl1, CellList *cl2, CellList *cl3, cudaStream_t stream) final;
 
     bool isSelfObjectInteraction() const final;
 };

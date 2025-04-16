@@ -1,6 +1,11 @@
+// Copyright 2020 ETH Zurich. All Rights Reserved.
+
 // Code: Noah Baumann Bachelor Thesis
-// 2Body SW potential
 // SW: Stillinger-Weber potiential
+// 2Body SW potential
+
+// Paper: "Water Modeled As an Intermediate Element between Carbon and Silicon 2009"
+// https://pubs.acs.org/doi/abs/10.1021/jp805227c
 #pragma once
 
 #include "accumulators/force.h"
@@ -8,7 +13,7 @@
 #include "interface.h"
 #include "parameters.h"
 
-#include <mirheo/core/utils/cuda_common.h>      //math::exp()
+#include <mirheo/core/utils/cuda_common.h>      //math::exp(), math:sqrt()
 
 namespace mirheo
 {
@@ -19,19 +24,21 @@ class PairwiseSW : public PairwiseKernel, public ParticleFetcher
 public:
     using ViewType     = PVview;     ///< Compatible view type
     using ParticleType = Particle;   ///< Compatible particle type
-    using HandlerType  = PairwiseLJ; ///< Corresponding handler
-    using ParamsType   = LJParams;   ///< Corresponding parameters type
+    using HandlerType  = PairwiseSW; ///< Corresponding handler
+    using ParamsType   = SW2Params;  ///< Corresponding parameters type
 
     /// Constructor
-    PairwiseSW(real rc, real epsilon, real sigma) :
+    PairwiseSW(real rc, real epsilon, real sigma, real A, real B) :
         ParticleFetcher(rc),
         epsilon_(epsilon),
-        sigma_(sigma)
+        sigma_(sigma),
+        A_(A),
+        B_(B)
     {}
 
     /// Generic constructor
-    PairwiseSW(real rc, const ParamsType& p, __UNUSED real dt, __UNUSED long seed=42424242) :
-        PairwiseSW{rc, p.epsilon, p.sigma}
+    PairwiseSW(real rc, const ParamsType& p, __UNUSED long seed=42424242) :
+        PairwiseSW{rc, p.epsilon, p.sigma, p.A, p.B}
     {}
 
     /// Evaluate the force
@@ -44,10 +51,14 @@ public:
             return make_real3(0.0_r);
 
         const real rs2 = (sigma_*sigma_) / dr2;
-        const real rs4 = rs2 * rs2;
-        const real phi = A*epsilon*(B*rs4 - 1.0_r)*math::exp(sigma_ / (dr - a*sigma_));
+        const real B_rs4 = B_*rs2 * rs2;
+        const real dr_ = math::sqrt(dr2);
+        const real r_rc = dr_ - rc_;
+        const real exp = math::exp(sigma_ / r_rc);
+        const real A_eps_exp = A_*epsilon_*exp;
+        const real phi = (sigma_*(B_rs4 - 1.0_r))/(r_rc*r_rc*dr_) + (4.0_r*B_rs4)/dr2;
 
-        return phi * dr/dr2;
+        return A_eps_exp * phi * dr;
     }
 
     /// initialize accumulator
@@ -68,9 +79,8 @@ public:
 private:
     real epsilon_;
     real sigma_;
-    const real A = 7.049556277;     //given from the paper
-    const real B = 0.6022245584;
-    const real a = 1.8;             //reduced cutoff
+    real A_;
+    real B_;
 };
 
 } // namespace mirheo

@@ -57,7 +57,6 @@ void exportParticleVectors(py::module& m)
             Returns:
                 A list of :math:`N \times 3` reals: 3 components of force for every of the N particles
         )")
-        //
         .def("setCoordinates", &ParticleVector::setCoordinates_vector, "coordinates"_a, R"(
             Args:
                 coordinates: A list of :math:`N \times 3` reals: 3 components of coordinate for every of the N particles
@@ -69,6 +68,11 @@ void exportParticleVectors(py::module& m)
         .def("setForces",      &ParticleVector::setForces_vector, "forces"_a, R"(
             Args:
                 forces: A list of :math:`N \times 3` reals: 3 components of force for every of the N particles
+        )")
+        .def("updateChannel", &ParticleVector::updateChannel, "channelName"_a, "values"_a, R"(
+            Args:
+                channelName: Name of the partivleVector Channel which will be overwritten by the new values
+                values: A list of :math:`N \times 3` reals: 3 components of coordinate for every of the N particles
         )");
 
     py::handlers_class<Mesh> pymesh(m, "Mesh", R"(

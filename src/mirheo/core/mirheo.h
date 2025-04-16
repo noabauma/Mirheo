@@ -54,7 +54,6 @@ public:
     /** \brief Construct a \c Mirheo object using MPI_COMM_WORLD.
         \param nranks3D Number of ranks along each cartesian direction.
         \param globalDomainSize The full domain dimensions in length units. Must be positive.
-        \param dt The simulation time step
         \param logInfo Information about logging
         \param checkpointInfo Information about checkpoint
         \param gpuAwareMPI \c true to use RDMA (must be compile with a MPI version that supports it)
@@ -64,7 +63,7 @@ public:
 
         The product of \p nranks3D must be equal to the number of available ranks (or hals if postprocess is used)
      */
-    Mirheo(int3 nranks3D, real3 globalDomainSize, real dt,
+    Mirheo(int3 nranks3D, real3 globalDomainSize,
            LogInfo logInfo, CheckpointInfo checkpointInfo, bool gpuAwareMPI=false,
            UnitConversion units = UnitConversion());
 
@@ -72,7 +71,7 @@ public:
         \note MPI will be NOT be initialized.
               If this constructor is used, the destructor will NOT finalize MPI.
      */
-    Mirheo(MPI_Comm comm, int3 nranks3D, real3 globalDomainSize, real dt,
+    Mirheo(MPI_Comm comm, int3 nranks3D, real3 globalDomainSize,
            LogInfo logInfo, CheckpointInfo checkpointInfo, bool gpuAwareMPI=false,
            UnitConversion units = UnitConversion());
 
@@ -113,7 +112,11 @@ public:
     */
     void dumpDependencyGraphToGraphML(const std::string& fname, bool current) const;
 
-    void run(int niters); ///< advance the system for a given number of time steps
+    /** \brief advance the system for a given number of time steps
+        \param niters number of interations
+        \param dt time step duration
+    */
+    void run(MirState::StepType niters, real dt);
 
     /** \brief register a ParticleVector in the simulation and initialize it with the gien InitialConditions.
         \param pv The ParticleVector to register
@@ -163,6 +166,18 @@ public:
     */
     void registerObjectBelongingChecker(const std::shared_ptr<ObjectBelongingChecker>& checker, ObjectVector *ov);
 
+    /** \brief deregister an \c Integrator
+        \param integrator the \c Integrator to deregister.
+        \see registerIntegrator().
+    */
+    void deregisterIntegrator(Integrator *integrator);
+
+    /** \brief deregister a Plugin
+        \param simPlugin the SimulationPlugin to deregister (only relevant if the current rank is a compute task).
+        \param postPlugin the PostprocessPlugin to deregister (only relevant if the current rank is a postprocess task).
+    */
+    void deregisterPlugins(SimulationPlugin *simPlugin, PostprocessPlugin *postPlugin);
+
     /** \brief Assign a registered \c Integrator to a registered ParticleVector.
         \param integrator The registered integrator (will die if it was not registered)
         \param pv The registered ParticleVector (will die if it was not registered)
@@ -173,11 +188,12 @@ public:
         \param interaction The registered interaction (will die if it is not registered)
         \param pv1 The first registered ParticleVector (will die if it is not registered)
         \param pv2 The second registered ParticleVector (will die if it is not registered)
+        \param pv3 The third registered ParticleVector (if set, will die if it is not registered)
 
         This was designed to handle PairwiseInteraction, which needs up to two ParticleVector.
         For self interaction cases (such as MembraneInteraction), \p pv1 and \p pv2 must be the same.
     */
-    void setInteraction(Interaction *interaction, ParticleVector *pv1, ParticleVector *pv2);
+    void setInteraction(Interaction *interaction, ParticleVector *pv1, ParticleVector *pv2, ParticleVector *pv3 = nullptr);
 
     /** \brief Assign a registered \c Bouncer to registered ObjectVector and ParticleVector.
         \param bouncer The registered bouncer (will die if it is not registered)
@@ -220,6 +236,7 @@ public:
         \param integrator \c Integrator object used to equilibrate the particles
         \param numDensity The number density used to initialize the particles
         \param mass The mass of one particle
+        \param dt Equilibration time step
         \param nsteps Number of equilibration steps
         \return The frozen particles
 
@@ -230,7 +247,7 @@ public:
                                                             std::vector<std::shared_ptr<Wall>> walls,
                                                             std::vector<std::shared_ptr<Interaction>> interactions,
                                                             std::shared_ptr<Integrator> integrator,
-                                                            real numDensity, real mass, int nsteps);
+                                                            real numDensity, real mass, real dt, int nsteps);
 
     /** \brief Create frozen particles inside the given objects.
         \param checker The ObjectBelongingChecker to split inside particles
@@ -240,6 +257,7 @@ public:
         \param integrator \c Integrator object used to equilibrate the particles
         \param numDensity The number density used to initialize the particles
         \param mass The mass of one particle
+        \param dt Equilibration time step
         \param nsteps Number of equilibration steps
         \return The frozen particles, with name "inside_" + name of \p shape
 
@@ -251,7 +269,7 @@ public:
                                                              std::shared_ptr<InitialConditions> icShape,
                                                              std::vector<std::shared_ptr<Interaction>> interactions,
                                                              std::shared_ptr<Integrator>   integrator,
-                                                             real numDensity, real mass, int nsteps);
+                                                             real numDensity, real mass, real dt, int nsteps);
 
     /** \brief Enable a registered ObjectBelongingChecker to split particles of a registered ParticleVector.
         \param checker The ObjectBelongingChecker (will die if it is not registered)
@@ -291,7 +309,7 @@ private:
     bool noPostprocess_;
     int pluginsTag_ {0}; ///< used to create unique tag per plugin
 
-    bool initialized_    = false;
+    bool initialized_    = false; ///< has the setup been called at least once?
     bool initializedMpi_ = false;
 
     MPI_Comm comm_      {MPI_COMM_NULL}; ///< base communicator (world)
@@ -300,7 +318,7 @@ private:
     MPI_Comm compComm_  {MPI_COMM_NULL}; ///< simulation communicator
     MPI_Comm interComm_ {MPI_COMM_NULL}; ///< intercommunicator between postprocess and simulation
 
-    void init(int3 nranks3D, real3 globalDomainSize, real dt, LogInfo logInfo,
+    void init(int3 nranks3D, real3 globalDomainSize, LogInfo logInfo,
               CheckpointInfo checkpointInfo, bool gpuAwareMPI,
               UnitConversion units, LoaderContext *context = nullptr);
     void initFromSnapshot(int3 nranks3D, const std::string& snapshotPath,
